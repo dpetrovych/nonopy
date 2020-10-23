@@ -1,38 +1,23 @@
-class Collapse:
-     def __init__(self, index, order, diff):
-        self.index = index
-        self.order = order
-        self.diff = diff
+from nonopy.out import print_line
 
 class Log:
-    def __init__(self):
-        self.items = [] 
+    def collapse_start(self, order, index, *, count):
+        return lambda _: None
 
-    def begin_collapse(self, order, index, *, count):
-        pass
+    def filter_start(self, order, index, *, count):
+        return lambda _: None
 
-    def diff(self, order, index, *, diff):
-        self.items.append(Collapse(index, order, diff))
-
-    def filter(self, order, index, *, count_before, count_after):
-        pass
+def repr_index(order, index):
+    return f'{order}{index}'.ljust(5)
 
 class PrintLog(Log):
     def __init__(self):
-        super()
+        super().__init__()
     
-    def begin_collapse(self, order, index, *, count):
-        print('begin collapse', f'{order}{index}', 'count=', count)
-        super().begin_collapse(order, index, count=count)
-    
-    def diff(self, order, index, *, diff):
-        print('diff', f'{order}{index}', 'diff=', diff)
-        super().diff(order, index, diff=diff)
+    def collapse_start(self, order, index, *, count):
+        print('collapse start ', repr_index(order, index), 'count =', count)
+        return lambda diff: print('         end   ', repr_index(order, index), 'diff =', print_line(diff, crossed = '×'))
 
-    def filter(self, order, index, *, count_before, count_after):
-        print('filter', f'{order}{index}', 'count=', f'{count_before} -> {count_after}')
-        super().filter(order, index, count_before=count_before, count_after=count_after)
-
-
-
-    
+    def filter_start(self, order, index, *, count):
+        print('filter   start ', repr_index(order, index), 'count =', f'{count} -> ...')
+        return lambda count_after: print('         end   ', repr_index(order, index) , 'count =', f'{count} -> {count_after}')
