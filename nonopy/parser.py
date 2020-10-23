@@ -1,6 +1,6 @@
 from itertools import takewhile
 
-from nonopy.nonogram import Nonogram
+from nonopy.nonogram import Nonogram, Nonotask
 
 class Parser():
     def parse(self, lines):
@@ -29,7 +29,16 @@ class Parser():
 
         height, width = int(descriptor['height']), int(descriptor['width'])
         rows, columns = descriptor['rows'], descriptor['columns']
+
+        if (rows_len := len(rows)) != height:
+            raise ValueError(f'rows length {rows_len} shoule be {height}')
+
+        if (columns_len := len(columns)) != width:
+            raise ValueError(f'columns length {columns_len} shoule be {width}')
+
+        task = Nonotask(rows = rows, columns = columns)
+
         goal = descriptor['goal']
         goal_formated = ''.join((goal[i * width: (i+1) * width] + '\n' for i in range(height)))
 
-        return Nonogram(height = height, width = width, rows = rows, columns = columns, goal = goal_formated)
+        return Nonogram(task, goal_formated)
