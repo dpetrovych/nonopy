@@ -17,12 +17,12 @@ class LineShould(TestCase):
 
     def test_1block__empty_line(self):
         line = Line([3], 5)
-        collapsed = line.collapse(empty_line(5))
+        collapsed, _ = line.collapse(empty_line(5))
 
         self.assertArrayEqual(collapsed, to_line([-1, -1, 1, -1, -1]))
 
     def test_2block__empty_line(self):
         line = Line([2, 1], 5)
-        collapsed = line.collapse(empty_line(5))
+        collapsed, _ = line.collapse(empty_line(5))
 
         self.assertArrayEqual(collapsed, to_line([-1, 1, -1, -1, -1]))

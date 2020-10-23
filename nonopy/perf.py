@@ -6,7 +6,7 @@ class PerfCounter:
         self.stat = {}
 
     def __repr__(self): 
-        return '\n'.join(f'{k}={v:8.3f}s'for k, v in self.stat.items())
+        return '\n'.join(f'{k.rjust(8)} = {v:8.3f}s'for k, v in self.stat.items())
 
     def solve_begin(self):
         self.start['solve'] = perf_counter()
