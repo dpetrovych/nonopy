@@ -9,6 +9,7 @@ from nonopy.hotmap import Hotmap
 from nonopy.log import Log
 from nonopy.perf import PerfCounter
 from nonopy.metrics import Metrics
+from nonopy.ticktack import ticktack
 
 
 class Solver():
@@ -40,41 +41,45 @@ class Solver():
             raise Exception('solve already run')
 
         self.__init_combinations()
-        
         self.perf.solve_begin()
-        while True:
+            
+        ticktackiter, breaker = ticktack('r', 'c')
+        for direction in ticktackiter():
             self.metrics.inc_cycle()
+
+            # hotmap combinations filter
             hotlines = self.hotmap.pop()
+            max_count = None
             for order, index in hotlines:
                 line = self.combinations[order][index]
                 log_filter_end = self.log.filter_start(order, index, count=line.count)
                 n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
 
+                max_count = max_count if max_count and max_count > n_lines_out else n_lines_out
                 self.metrics.add_line_instantiation('filter', n_lines_in)
                 log_filter_end(n_lines_out)
+            
+            # field combinations colapse
+            lines_by_combinations = ((line.count, index, line) 
+                for index, line in enumerate(self.combinations[direction]))
 
-            lines_by_combinations = ((line.count, order, index, line) 
-                for order, lines in self.combinations.items()
-                for index, line in enumerate(lines))
+            for count, index, line in sorted(lines_by_combinations):
+                log_collapse_end = self.log.collapse_start(direction, index, count=count)
 
-            for count, order, index, line in sorted(lines_by_combinations):
-                log_collapse_end = self.log.collapse_start(order, index, count=count)
-
-                field_line = self.field.get_line(order, index)
+                field_line = self.field.get_line(direction, index)
                 collapsed_line, n_lines_in = line.collapse(field_line)
                 diff, has_diff = dline.diff(collapsed_line, field_line)
 
                 self.metrics.add_line_instantiation('collapse', n_lines_in)
                 log_collapse_end(diff)
 
-                if not has_diff and self.hotmap.is_hot:
+                if not has_diff and self.hotmap.is_hot and not (max_count and n_lines_in <= max_count):
                     break
                 
-                self.field.apply(order, index, collapsed_line)
-                self.hotmap.apply(order, index, diff)
+                self.field.apply(direction, index, collapsed_line)
+                self.hotmap.apply(direction, index, diff)
 
-            if not self.hotmap.is_hot:
-                break
+            breaker(not self.hotmap.is_hot)
 
         self.perf.solve_end()
         self.status, grid = ('solved', self.field.grid) if self.field.is_solved else ('unsolved', None)

@@ -10,7 +10,7 @@ class Hotmap:
     
     is_hot = property(lambda self: self.columns or self.rows)
 
-    def apply(self, index, order, diff):
+    def apply(self, order, index, diff):
         effected_cells = set(np.where(diff != Cell.EMPTY)[0])
         if not effected_cells:
             return

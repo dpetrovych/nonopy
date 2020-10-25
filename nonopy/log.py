@@ -16,7 +16,7 @@ class PrintLog(Log):
     
     def collapse_start(self, order, index, *, count):
         print('collapse start ', repr_index(order, index), 'count =', count)
-        return lambda diff: print('         end   ', repr_index(order, index), 'diff =', print_line(diff, crossed = '×'))
+        return lambda diff: print('         end   ', repr_index(order, index), 'diff =', print_line(diff, crossed = 'x'))
 
     def filter_start(self, order, index, *, count):
         print('filter   start ', repr_index(order, index), 'count =', f'{count} -> ...')

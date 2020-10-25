@@ -12,7 +12,7 @@ class Field:
     
     is_solved = property(lambda self: (self.grid != Cell.EMPTY).all())
 
-    def apply(self, index, order, line):
+    def apply(self, order, index, line):
         if order == 'r':
             self.grid[index] = line
         elif order == 'c':
