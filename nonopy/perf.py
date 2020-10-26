@@ -11,8 +11,8 @@ class TimeScope:
         self.start = perf_counter()
 
     def __exit__(self, type, value, tb):
-        span = perf_counter() - self.start
-        self.report(self.key, span)
+        dt = perf_counter() - self.start
+        self.report(self.key, dt)
 
 
 class PerfCounter:

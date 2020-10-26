@@ -2,7 +2,7 @@ import numpy as np
 import textwrap as text
 
 import nonopy.line.dline as dline
-from nonopy.line import Line
+from nonopy.linee import Line
 from nonopy.cell import Cell
 from nonopy.field import Field
 from nonopy.hotheap import Hotheap

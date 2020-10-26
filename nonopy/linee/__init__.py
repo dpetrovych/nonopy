@@ -1,7 +1,7 @@
 import numpy as np
 
-import nonopy.line.cline as cline
-import nonopy.line.combinations as combinations
+import nonopy.linee.cline as cline
+import nonopy.linee.combinations as combinations
 from nonopy.cell import Cell
 
 class Line:
