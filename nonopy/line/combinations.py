@@ -1,5 +1,5 @@
 import numpy as np
-from itertools import islice
+from itertools import islice, tee
 
 from nonopy.cell import Cell
 import nonopy.line.cline as cline
@@ -15,36 +15,63 @@ def calculate_hottask(task, length):
 
 
 def rec_block_tigth_positions(t):
-        head, tail = t[0], t[1:]
-        if not tail:
-            return [(head, head)]
+    head, tail = t[0], t[1:]
+    if not tail:
+        return [(head, head)]
 
-        tail_pos = rec_block_tigth_positions(tail)
-        last_pos = tail_pos[-1][1]
-        tail_pos.append((head, last_pos + head + MIN_BLOCK_SPACE))
-        return tail_pos
+    tail_pos = rec_block_tigth_positions(tail)
+    last_pos = tail_pos[-1][1]
+    tail_pos.append((head, last_pos + head + MIN_BLOCK_SPACE))
+    return tail_pos
+
+
+def __find_weight_center(task):
+    il, ir = 0, -1
+    suml, sumr = -MIN_BLOCK_SPACE, -MIN_BLOCK_SPACE
+    while il - ir <= len(task):
+        if suml <= sumr:
+            suml += task[il] + MIN_BLOCK_SPACE
+            il += 1
+        else:
+            sumr += task[ir] + MIN_BLOCK_SPACE
+            ir -= 1
+    return il, (suml, sumr)
+
+
+def __iderivative(iterator, start=0):
+    prev = start
+    for item in iterator:
+        yield item - prev
+        prev = item
 
 
 def calculate_count(task, length):
     """
     Calculates how many combinations of spans (thus block positions) available for a specific task for a line length
     Helps to prioritize reduce operations before calculating actual spans
+
+    Uses divide & conquer strategy by dividing line in 2 and calculating respective counts in left and right parts.
+    Than assembles results by multiplying.
+    
     """
-    block_pos_pairs = rec_block_tigth_positions(task)
+    if len(task) == 1:
+        return length - task[0] + 1
 
-    def rec_count(i, space_len):
-        block, tail_pos = block_pos_pairs[i]
-        move_space = space_len - tail_pos + 1 
+    center, (minl, minr) = __find_weight_center(task)
+    maxl = length - minr
 
-        if i == 0:
-            return move_space
+    left_task, right_task = task[:center], task[center:]
 
-        next_i = i - 1
-        return sum(
-            rec_count(next_i, space_len - block - step - MIN_BLOCK_SPACE)
-            for step in range(0, move_space))
+    right_cursor = lambda cl: length - cl - MIN_BLOCK_SPACE
 
-    return rec_count(len(block_pos_pairs) - 1, length)
+    left_counts, right_counts = zip(
+        *((calculate_count(left_task, left_cursor),
+           calculate_count(right_task, right_cursor(left_cursor)))
+          for left_cursor in range(minl, maxl)))
+
+    return sum(
+        dleft * right
+        for dleft, right in zip(__iderivative(left_counts), right_counts))
 
 
 def __match_line(cline, fline):
@@ -67,14 +94,15 @@ def calculate(task, line):
 
         if i == 0:
             return [[step] for step in range(move_space)
-                    if __match_line(cline.iter_single(head, step, len(ln)), ln)]
+                    if __match_line(cline.iter_single(head, step, len(ln)), ln)
+                    ]
 
-        next_i = i-1
+        next_i = i - 1
         head_steps = ((step, step + head + 1) for step in range(move_space))
-        return [[hstep, *tsteps] for hstep, trim in head_steps
-                if __match_line(cline.iter_single(head, hstep, trim), islice(ln, trim))
+        return [[hstep, *tsteps] for hstep, trim in head_steps if __match_line(
+            cline.iter_single(head, hstep, trim), islice(ln, trim))
                 for tsteps in rec_calc(next_i, ln[trim:])]
-    
+
     return rec_calc(len(block_pos_pairs) - 1, line)
 
 

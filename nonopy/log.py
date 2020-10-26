@@ -18,7 +18,7 @@ def repr_index(order, index):
     return f'{order}{index}'.ljust(5)
 
 def end():
-    return '          end   '
+    return '          end  '
 
 class InitLinePerfContext():
     def __init__(self, order, index, *, task):
@@ -28,7 +28,7 @@ class InitLinePerfContext():
 
     def __enter__(self):
         self.start = perf_counter()
-        print('line init start ', repr_index(self.order, self.index), 'task =', self.task)
+        print('line init start', repr_index(self.order, self.index), 'task =', self.task)
         return self.log
     
     def log(self, count = None):
@@ -48,12 +48,12 @@ class PrintLog(Log):
         return InitLinePerfContext(order, index, task = task)
 
     def collapse_start(self, order, index, *, count):
-        print('collapse  start ', repr_index(order, index), 'count =', count)
+        print('collapse  start', repr_index(order, index), 'count =', count)
         return lambda diff: print(end(), repr_index(order, index),
                                   'diff =', print_line(diff, crossed='x'))
 
     def filter_start(self, order, index, *, count):
-        print(end, repr_index(order, index), 'count =',
+        print('filter    start', repr_index(order, index), 'count =',
               f'{count} -> ...')
         return lambda count_after: print(end(),
                                          repr_index(order, index), 'count =',
