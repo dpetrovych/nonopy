@@ -14,10 +14,10 @@ parser.add_argument('path',
 
 parser.add_argument('--solvers',
                     '-s',
-                    help='solvers to run [ABD]+',
+                    help='solvers to run (one-letter code for solver algorithm)',
                     type=str,
-                    metavar='D',
-                    default='D')
+                    metavar='ABC',
+                    default='A')
 
 parser.add_argument('--verbose',
                     '-v',
