@@ -39,43 +39,43 @@ class Solver():
         if self.status:
             raise Exception('solve already run')
 
-        self.__init_combinations()
-        
-        self.perf.solve_begin()
-        while True:
-            self.metrics.inc_cycle()
-            hotlines = self.hotmap.pop()
-            for order, index in hotlines:
-                line = self.combinations[order][index]
-                log_filter_end = self.log.filter_start(order, index, count=line.count)
-                n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
+        with self.perf.init():
+            self.__init_combinations()
+            
+        with self.perf.solve():
+            while True:
+                self.metrics.inc_cycle()
+                hotlines = self.hotmap.pop()
+                for order, index in hotlines:
+                    line = self.combinations[order][index]
+                    log_filter_end = self.log.filter_start(order, index, count=line.count)
+                    n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
 
-                self.metrics.add_line_instantiation('filter', n_lines_in)
-                log_filter_end(n_lines_out)
+                    self.metrics.add_line_instantiation('filter', n_lines_in)
+                    log_filter_end(n_lines_out)
 
-            lines_by_combinations = ((line.count, order, index, line) 
-                for order, lines in self.combinations.items()
-                for index, line in enumerate(lines))
+                lines_by_combinations = ((line.count, order, index, line) 
+                    for order, lines in self.combinations.items()
+                    for index, line in enumerate(lines))
 
-            for count, order, index, line in sorted(lines_by_combinations):
-                log_collapse_end = self.log.collapse_start(order, index, count=count)
+                for count, order, index, line in sorted(lines_by_combinations):
+                    log_collapse_end = self.log.collapse_start(order, index, count=count)
 
-                field_line = self.field.get_line(order, index)
-                collapsed_line, n_lines_in = line.collapse(field_line)
-                diff, has_diff = dline.diff(collapsed_line, field_line)
+                    field_line = self.field.get_line(order, index)
+                    collapsed_line, n_lines_in = line.collapse(field_line)
+                    diff, has_diff = dline.diff(collapsed_line, field_line)
 
-                self.metrics.add_line_instantiation('collapse', n_lines_in)
-                log_collapse_end(diff)
+                    self.metrics.add_line_instantiation('collapse', n_lines_in)
+                    log_collapse_end(diff)
 
-                if not has_diff and self.hotmap.is_hot:
+                    if not has_diff and self.hotmap.is_hot:
+                        break
+                    
+                    self.field.apply(order, index, collapsed_line)
+                    self.hotmap.apply(order, index, diff)
+
+                if not self.hotmap.is_hot:
                     break
-                
-                self.field.apply(order, index, collapsed_line)
-                self.hotmap.apply(order, index, diff)
 
-            if not self.hotmap.is_hot:
-                break
-
-        self.perf.solve_end()
         self.status, grid = ('solved', self.field.grid) if self.field.is_solved else ('unsolved', None)
         return grid

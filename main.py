@@ -14,10 +14,10 @@ parser.add_argument('path',
 
 parser.add_argument('--solvers',
                     '-s',
-                    help='solvers to run [AB]+',
+                    help='solvers to run [ABD]+',
                     type=str,
-                    metavar='A',
-                    default='A')
+                    metavar='D',
+                    default='D')
 
 parser.add_argument('--verbose',
                     '-v',
@@ -47,4 +47,4 @@ if len(solutions) == 1:
     grid = solutions[0][1][0]
     print(print_grid(grid))
 
-print_stats(solutions)
+print_stats(solutions, filename=f.name)

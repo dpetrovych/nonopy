@@ -3,12 +3,19 @@ import numpy as np
 from nonopy.cell import Cell
 import nonopy.line.cline as cline
 
-def __calc_moves(length, head, tail = None):
+def calculate_moves(length, head, tail = None):
     """
     Calculates how many different positions can a head block have
     E.g.: if head == length and tail is [], there is only 1 position available - whole line lenght
     """
     return  length - head - sum(tail) - len(tail) + 1 if tail else length - head + 1
+    # TODO: precalc tail sum calculaiton 
+
+def calculate_hottask(task, length):
+    """Calculates if task has block that produces filled cells on collapse on a clean line"""
+    max_block = max(task)
+    moves = calculate_moves(length, 0, task)
+    return moves < max_block
 
 def calculate_count(task, length):
     """
@@ -16,7 +23,7 @@ def calculate_count(task, length):
     Helps to prioritize reduce operations before calculating actual spans
     """
     head, tail = task[0], task[1:]
-    move_space = __calc_moves(length, head, tail)
+    move_space = calculate_moves(length, head, tail)
     
     if not tail:
         return move_space
@@ -36,7 +43,7 @@ def calculate(task, line):
     so line is provided to avoid combinations that are eliminated.
     """
     head, tail = task[0], task[1:]
-    move_space = __calc_moves(len(line), head, tail)
+    move_space = calculate_moves(len(line), head, tail)
 
     if not tail:
         return [[step] 

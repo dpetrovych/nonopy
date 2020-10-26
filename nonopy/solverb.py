@@ -39,48 +39,48 @@ class Solver():
     def solve(self, explain = False):
         if self.status:
             raise Exception('solve already run')
-
-        self.__init_combinations()
-        self.perf.solve_begin()
+        
+        with self.perf.init():
+            self.__init_combinations()
             
-        ticktackiter, breaker = ticktack('r', 'c')
-        for direction in ticktackiter():
-            self.metrics.inc_cycle()
+        with self.perf.solve():
+            ticktackiter, breaker = ticktack('r', 'c')
+            for direction in ticktackiter():
+                self.metrics.inc_cycle()
 
-            # hotmap combinations filter
-            hotlines = self.hotmap.pop()
-            max_count = None
-            for order, index in hotlines:
-                line = self.combinations[order][index]
-                log_filter_end = self.log.filter_start(order, index, count=line.count)
-                n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
+                # hotmap combinations filter
+                hotlines = self.hotmap.pop()
+                max_count = None
+                for order, index in hotlines:
+                    line = self.combinations[order][index]
+                    log_filter_end = self.log.filter_start(order, index, count=line.count)
+                    n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
 
-                max_count = max_count if max_count and max_count > n_lines_out else n_lines_out
-                self.metrics.add_line_instantiation('filter', n_lines_in)
-                log_filter_end(n_lines_out)
-            
-            # field combinations colapse
-            lines_by_combinations = ((line.count, index, line) 
-                for index, line in enumerate(self.combinations[direction]))
-
-            for count, index, line in sorted(lines_by_combinations):
-                log_collapse_end = self.log.collapse_start(direction, index, count=count)
-
-                field_line = self.field.get_line(direction, index)
-                collapsed_line, n_lines_in = line.collapse(field_line)
-                diff, has_diff = dline.diff(collapsed_line, field_line)
-
-                self.metrics.add_line_instantiation('collapse', n_lines_in)
-                log_collapse_end(diff)
-
-                if not has_diff and self.hotmap.is_hot and not (max_count and n_lines_in <= max_count):
-                    break
+                    max_count = max_count if max_count and max_count > n_lines_out else n_lines_out
+                    self.metrics.add_line_instantiation('filter', n_lines_in)
+                    log_filter_end(n_lines_out)
                 
-                self.field.apply(direction, index, collapsed_line)
-                self.hotmap.apply(direction, index, diff)
+                # field combinations colapse
+                lines_by_combinations = ((line.count, index, line) 
+                    for index, line in enumerate(self.combinations[direction]))
 
-            breaker(not self.hotmap.is_hot)
+                for count, index, line in sorted(lines_by_combinations):
+                    log_collapse_end = self.log.collapse_start(direction, index, count=count)
 
-        self.perf.solve_end()
+                    field_line = self.field.get_line(direction, index)
+                    collapsed_line, n_lines_in = line.collapse(field_line)
+                    diff, has_diff = dline.diff(collapsed_line, field_line)
+
+                    self.metrics.add_line_instantiation('collapse', n_lines_in)
+                    log_collapse_end(diff)
+
+                    if not has_diff and self.hotmap.is_hot and not (max_count and n_lines_in <= max_count):
+                        break
+                    
+                    self.field.apply(direction, index, collapsed_line)
+                    self.hotmap.apply(direction, index, diff)
+
+                breaker(not self.hotmap.is_hot)
+
         self.status, grid = ('solved', self.field.grid) if self.field.is_solved else ('unsolved', None)
         return grid

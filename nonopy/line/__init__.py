@@ -9,7 +9,8 @@ class Line:
         self.task = task
         self.length = length
         self.combinations = None
-        self.init_count = combinations.calculate_count(task, length)
+        self.init_count = combinations.calculate_count(task, length) # TODO lazycalc
+        self.init_hot = combinations.calculate_hottask(task, length)
 
     def get_count(self):
         return len(self.combinations) if self.combinations else self.init_count
