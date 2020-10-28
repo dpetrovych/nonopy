@@ -1,40 +1,11 @@
+from contextlib import nullcontext
 import curses
-from curses import panel
 from time import perf_counter
 
 from nonopy.log.log import Log
 from nonopy.log.printlog import repr_index, end
 from nonopy.format import format_line, format_grid
 from nonopy.field import Field
-
-
-class InitLinePerfContext():
-    def __init__(self, curseslog, order, index, *, task):
-        self.curseslog = curseslog
-        self.order = order
-        self.index = index
-        self.task = task
-
-    def __repr_index(self):
-        return repr_index(self.order, self.index)
-
-    def __enter__(self):
-        self.start = perf_counter()
-        self.curseslog.append_log(
-            f'line init start {self.__repr_index()} task = {self.task}')
-        self.curseslog.refresh()
-        return self.log
-
-    def log(self, count=None):
-        if count:
-            self.count = count
-
-    def __exit__(self, type, value, tb):
-        dt = perf_counter() - self.start
-        self.curseslog.append_log(
-            f'{end()} {self.__repr_index()} time = {dt:.3f}s  count = {self.count}'
-        )
-        self.curseslog.refresh()
 
 
 class CursesLog(Log):
@@ -89,9 +60,21 @@ class CursesLog(Log):
         self.stdscr.refresh()
 
     def init_line(self, order, index, *, task):
-        return InitLinePerfContext(self, order, index, task=task)
+        start = perf_counter()
+        self.append_log(
+            f'line init start {repr_index(order, index)} task = {task}')
+        self.refresh()
 
-    def collapse_start(self, order, index, *, count):
+        def init_end(count=None):
+            dt = perf_counter() - start
+            self.append_log(
+                f'{end()} {repr_index(order, index)} time = {dt:.3f}s  count = {count}'
+            )
+            self.refresh()
+
+        return nullcontext(init_end)
+
+    def collapse(self, order, index, *, count):
         self.append_log(
             f'collapse  start {repr_index(order, index)} count = {count}')
         self.refresh()
@@ -104,9 +87,9 @@ class CursesLog(Log):
             self.draw_field()
             self.refresh()
 
-        return collapse_end
+        return nullcontext(collapse_end)
 
-    def filter_start(self, order, index, *, count):
+    def filter(self, order, index, *, count):
         self.append_log(
             f'filter    start {repr_index(order, index)} count = {count} -> ...'
         )
@@ -118,4 +101,4 @@ class CursesLog(Log):
             )
             self.refresh()
 
-        return filter_end
+        return nullcontext(filter_end)

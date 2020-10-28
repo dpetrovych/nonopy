@@ -25,9 +25,9 @@ class Solver():
                            'performance:', text.indent(repr(self.perf), '  ')])
 
     def __init_line(self, order, index, task, length):
-        with self.log.init_line(order, index, task = task) as log:
+        with self.log.init_line(order, index, task = task) as init_end:
             line = Line(task, length)
-            log(count = line.count)
+            init_end(count = line.count)
             return line
 
     def preheat(self):
@@ -57,21 +57,20 @@ class Solver():
                 self.metrics.inc_cycle()
                 
                 order, index, line = self.heap.pop()
-
-                log_filter_end = self.log.filter_start(order, index, count=line.count)
-                n_lines_in, n_lines_out = line.filter(self.field.get_line(order, index))
-
-                self.metrics.add_line_instantiation('filter', n_lines_in)
-                log_filter_end(n_lines_out)
-
-                log_collapse_end = self.log.collapse_start(order, index, count=line.count)
-
                 field_line = self.field.get_line(order, index)
-                collapsed_line, n_lines_in = line.collapse(field_line)
-                diff, _ = dline.diff(collapsed_line, field_line)
 
-                self.metrics.add_line_instantiation('collapse', n_lines_in)
-                log_collapse_end(diff)
+                with self.log.filter(order, index, count=line.count) as log_filter_end:
+                    n_lines_in, n_lines_out = line.filter(field_line)
+
+                    self.metrics.add_line_instantiation('filter', n_lines_in)
+                    log_filter_end(count_after=n_lines_out)
+
+                with self.log.collapse(order, index, count=line.count) as log_collapse_end:
+                    collapsed_line, n_lines_in = line.collapse(field_line)
+                    diff, _ = dline.diff(collapsed_line, field_line)
+
+                    self.metrics.add_line_instantiation('collapse', n_lines_in)
+                    log_collapse_end(diff = diff)
                 
                 self.field.apply(order, index, collapsed_line)
                 self.heap.push_diff(order, diff)
