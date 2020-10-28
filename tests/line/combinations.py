@@ -17,7 +17,8 @@ class CombinationsShould(TestCase):
     def test_calculate_count(self):
         subtests = [([3], 3, 1), ([1, 1], 3, 1), ([1, 1], 4, 3),
                     ([1, 2, 1], 8, 10),
-                    ([1, 2, 1, 2, 2, 1, 1, 1, 2], 45, 38567100)]
+                    ([1, 2, 1, 2, 2, 1, 1, 1, 2], 45, 38567100),
+                    ([1, 2, 2, 1, 12, 1, 2, 2], 75, 886322710)]
 
         for task, length, expected in subtests:
             with self.subTest('calculate_count', task=task, length=length):
