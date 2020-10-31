@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import repeat
 
 from nonopy.cell import Cell
 
@@ -8,7 +9,7 @@ class Block:
         self.block_length = block_length
         self.line_length = line_length
         self.start = start
-        self.moves = [True] * (move_space + 1)
+        self.moves = list(repeat(True, move_space + 1))
 
         self.is_leftmost = self.start == 0
         self.is_rigthmost = self.start + self.block_length + move_space == self.line_length
@@ -16,8 +17,8 @@ class Block:
     def __repr__(self):
         return f'Block(length={self.block_length}, start={self.start}, count={self.count})'
 
-    count = property(lambda self: np.sum(self.moves))
-    hot = property(lambda self: np.sum(self.moves) <= self.block_length)
+    count = property(lambda self: sum(self.moves))
+    hot = property(lambda self: sum(self.moves) <= self.block_length)
 
     def collapse(self):
         mask = np.zeros(self.line_length, dtype=np.int64)
@@ -45,4 +46,17 @@ class Block:
             is_available and is_valid(move)
             for move, is_available in enumerate(self.moves)
         ]
+
         return self.moves
+
+    def filter_left(self, leftmost):
+        if leftmost > 0:
+            self.moves[:leftmost] = repeat(False, leftmost)
+
+        return np.where(self.moves)[0][0]
+
+    def filter_right(self, rightmost):
+        if rightmost > 0:
+            self.moves[-rightmost:] = repeat(False, rightmost)
+
+        return len(self.moves) - np.where(self.moves)[0][-1] - 1

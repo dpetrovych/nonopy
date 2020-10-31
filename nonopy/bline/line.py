@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import accumulate
+from functools import reduce
 
-import nonopy.line.cline as cline
 from nonopy.bline.block import Block
 from nonopy.cell import Cell
 
@@ -16,7 +16,7 @@ class Line:
         move_space = length - sum(
             task) - MIN_BLOCK_SPACE * len(task) + MIN_BLOCK_SPACE
         start_indexes = accumulate(
-            [0] + task, lambda acc, cur: acc + cur + MIN_BLOCK_SPACE)
+            task, lambda acc, cur: acc + cur + MIN_BLOCK_SPACE, initial=0)
 
         self.blocks = [
             Block(block, start, move_space, length)
@@ -35,18 +35,29 @@ class Line:
         before_count = self.count
         collapsed = np.array([b.collapse() for b in self.blocks])
 
-        print('b', self.blocks)
-        print('c', collapsed)
+        print('clpsd', collapsed)
 
-        empty, filled = np.all(collapsed == 0, axis=0), np.any(collapsed == 1.,
-                                                               axis=0)
+        crossed = np.all(collapsed == 0, axis=0)
+        filled = np.any(collapsed == 1., axis=0)
 
-        return np.full(len(line), -1) + 1 * empty + 2 * filled, before_count
+        print('crsd', crossed)
+        print('fld', filled)
+
+        return (np.full(len(line), Cell.EMPTY) +
+                (Cell.CROSSED - Cell.EMPTY) * crossed +
+                (Cell.FILLED - Cell.EMPTY) * filled), before_count
 
     def filter(self, line):
         """Eliminates cobminations that do not correspond to current line state"""
         before_count = self.count
-        for b in self.blocks:
-            b.filter(line)
+
+        # filter each
+        reduce(lambda _, block: block.filter(line), self.blocks, None)
+
+        # compact left
+        reduce(lambda l, block: block.filter_left(l), self.blocks, 0)
+
+        # compact right
+        reduce(lambda r, block: block.filter_right(r), self.blocks[::-1], 0)
 
         return before_count, self.count
