@@ -7,7 +7,3 @@ class Cell:
     
     dtype = numpy.int8
 
-    @staticmethod
-    def is_not_empty(cell):
-        return cell != Cell.EMPTY
-
