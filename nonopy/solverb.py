@@ -2,7 +2,7 @@ import numpy as np
 import textwrap as text
 
 import nonopy.line.dline as dline
-from nonopy.line import Line
+from nonopy.bline import Line
 from nonopy.cell import Cell
 from nonopy.field import Field
 from nonopy.hotheap import Hotheap
@@ -60,19 +60,19 @@ class Solver():
                 field_line = self.field.get_line(order, index)
 
                 with self.log.filter(order, index, count=line.count, line=field_line) as log_filter_end:
-                    n_lines_in, n_lines_out = line.filter(field_line)
+                    _, n_lines_out = line.filter(field_line)
 
-                    self.metrics.add_line_instantiation('filter', n_lines_in)
+                    # self.metrics.add_line_instantiation('filter', n_lines_in)
                     log_filter_end(count_after=n_lines_out)
 
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
-                    collapsed_line, n_lines_in = line.collapse(field_line)
+                    collapsed_line, _ = line.collapse()
                     diff, _ = dline.diff(collapsed_line, field_line)
 
-                    self.metrics.add_line_instantiation('collapse', n_lines_in)
+                    # self.metrics.add_line_instantiation('collapse', n_lines_in)
                     log_collapse_end(diff = diff)
                 
-                self.field.apply(order, index, collapsed_line)
+                self.field.apply_diff(order, index, collapsed_line)
                 self.heap.push_diff(order, diff)
 
         self.status, grid = ('solved', self.field.grid) if self.field.is_solved else ('unsolved', None)

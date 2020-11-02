@@ -3,12 +3,15 @@ import textwrap as text
 
 import nonopy.line.dline as dline
 from nonopy.line import Line
+from nonopy.bline import Line as BLine
 from nonopy.cell import Cell
 from nonopy.field import Field
 from nonopy.hotheap import Hotheap
 from nonopy.log import Log
 from nonopy.perf import PerfCounter
 from nonopy.metrics import Metrics
+
+from nonopy.format import format_line
 
 
 class Solver():
@@ -30,6 +33,9 @@ class Solver():
             init_end(count = line.count)
             return line
 
+    def __init_bline(self, order, index, task, length):
+        return BLine(task, length)
+
     def preheat(self):
         with self.perf.init():
             self.field = Field(self.task.height, self.task.width)
@@ -37,6 +43,13 @@ class Solver():
                 'r': [self.__init_line('r', i, row, self.task.width)
                     for i, row in enumerate(self.task.rows)],
                 'c': [self.__init_line('c', i, column, self.task.height)
+                    for i, column in enumerate(self.task.columns)]
+            }
+
+            self.blines = {
+                'r': [self.__init_bline('r', i, row, self.task.width)
+                    for i, row in enumerate(self.task.rows)],
+                'c': [self.__init_bline('c', i, column, self.task.height)
                     for i, column in enumerate(self.task.columns)]
             }
 
@@ -57,10 +70,12 @@ class Solver():
                 self.metrics.inc_cycle()
                 
                 order, index, line = self.heap.pop()
+                bline = self.blines[order][index]
                 field_line = self.field.get_line(order, index)
 
                 with self.log.filter(order, index, count=line.count, line=field_line) as log_filter_end:
                     n_lines_in, n_lines_out = line.filter(field_line)
+                    bline.filter(field_line)
 
                     self.metrics.add_line_instantiation('filter', n_lines_in)
                     log_filter_end(count_after=n_lines_out)
@@ -68,6 +83,18 @@ class Solver():
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
                     collapsed_line, n_lines_in = line.collapse(field_line)
                     diff, _ = dline.diff(collapsed_line, field_line)
+
+                    collapsed_bline, _ = bline.collapse()
+                    bdiff, _ = dline.diff(collapsed_bline, field_line)
+
+                    if (diff != bdiff).any():
+                        raise Exception('\n'.join([
+                            f'test failed', 
+                            f'task = {line.task}',
+                            f'field = {format_line(field_line)}',
+                            f'adiff = {format_line(diff)}',
+                            f'bdiff = {format_line(bdiff)}']))
+
 
                     self.metrics.add_line_instantiation('collapse', n_lines_in)
                     log_collapse_end(diff = diff)

@@ -36,8 +36,8 @@ class Block:
             edger = range(end,
                           self.line_length) if self.is_rigthmost else [end]
 
-            body = (field_line[start:end] != Cell.CROSSED).all()
             left = (field_line[edgel] != Cell.FILLED).all()
+            body = (field_line[start:end] != Cell.CROSSED).all()
             right = (field_line[edger] != Cell.FILLED).all()
 
             return body and left and right

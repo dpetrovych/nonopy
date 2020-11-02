@@ -26,24 +26,19 @@ class Line:
         self.init_hot = any(b.hot for b in self.blocks)
 
     def get_count(self):
-        return np.prod(b.count for b in self.blocks)
+        return reduce(lambda prod, b: prod * b.count, self.blocks, 1)
 
     count = property(get_count)
 
-    def collapse(self, line):
+    def collapse(self):
         """Performs collapse operation and returns diff with the line"""
         before_count = self.count
         collapsed = np.array([b.collapse() for b in self.blocks])
 
-        print('clpsd', collapsed)
-
         crossed = np.all(collapsed == 0, axis=0)
         filled = np.any(collapsed == 1., axis=0)
 
-        print('crsd', crossed)
-        print('fld', filled)
-
-        return (np.full(len(line), Cell.EMPTY) +
+        return (np.full(self.length, Cell.EMPTY) +
                 (Cell.CROSSED - Cell.EMPTY) * crossed +
                 (Cell.FILLED - Cell.EMPTY) * filled), before_count
 
