@@ -59,14 +59,8 @@ class Solver():
                 order, index, line = self.heap.pop()
                 field_line = self.field.get_line(order, index)
 
-                with self.log.filter(order, index, count=line.count, line=field_line) as log_filter_end:
-                    n_lines_in, n_lines_out = line.filter(field_line)
-
-                    self.metrics.add_line_instantiation('filter', n_lines_in)
-                    log_filter_end(count_after=n_lines_out)
-
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
-                    collapsed_line, n_lines_in = line.collapse()
+                    collapsed_line, n_lines_in = line.collapse(field_line)
                     diff, _ = dline.diff(collapsed_line, field_line)
 
                     self.metrics.add_line_instantiation('collapse', n_lines_in)
