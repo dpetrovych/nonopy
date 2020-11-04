@@ -3,14 +3,7 @@ import numpy as np
 
 from nonopy.line.combinations import calculate_count, calculate
 from nonopy.cell import Cell
-
-
-def to_line(lst):
-    return np.array(lst, Cell.dtype)
-
-
-def empty_line(length):
-    return to_line([Cell.EMPTY] * length)
+from tests.utils import stoline, emptyline
 
 
 class CombinationsShould(TestCase):
@@ -26,11 +19,10 @@ class CombinationsShould(TestCase):
                 self.assertEqual(expected, count)
 
     def test_calculate__empty_line(self):
-        subtests = [([3], empty_line(3), [[0]]),
-                    ([1, 1], empty_line(3), [[0, 0]]),
-                    ([1, 1], empty_line(4), [[0, 0], [0, 1], [1, 0]]),
-                    ([1, 2,
-                      1], empty_line(8), [[0, 0, 0], [0, 0, 1], [0, 0, 2],
+        subtests = [([3], emptyline(3), [[0]]),
+                    ([1, 1], emptyline(3), [[0, 0]]),
+                    ([1, 1], emptyline(4), [[0, 0], [0, 1], [1, 0]]),
+                    ([1, 2, 1], emptyline(8), [[0, 0, 0], [0, 0, 1], [0, 0, 2],
                                           [0, 1, 0], [0, 1, 1], [0, 2, 0],
                                           [1, 0, 0], [1, 0, 1], [1, 1, 0],
                                           [2, 0, 0]])]
@@ -43,14 +35,13 @@ class CombinationsShould(TestCase):
                 self.assertListEqual(expected, combinations)
 
     def test_calculate__filled_line(self):
-        subtests = [([1], to_line([0, -1, 0]), [[1]]),
-                    ([1], to_line([-1, -1, 1]), [[2]]),
-                    ([1, 1], to_line([-1, 0, -1, -1]), [[0, 0], [0, 1]]),
-                    ([1, 2,
-                      1], empty_line(8), [[0, 0, 0], [0, 0, 1], [0, 0, 2],
-                                          [0, 1, 0], [0, 1, 1], [0, 2, 0],
-                                          [1, 0, 0], [1, 0, 1], [1, 1, 0],
-                                          [2, 0, 0]])]
+        subtests = [([1], stoline('0 0'), [[1]]),
+                    ([1], stoline('  1'), [[2]]),
+                    ([1, 1], stoline(' 0  '), [[0, 0], [0, 1]]),
+                    ([1, 2, 1], emptyline(8), [[0, 0, 0], [0, 0, 1], [0, 0, 2],
+                                               [0, 1, 0], [0, 1, 1], [0, 2, 0],
+                                               [1, 0, 0], [1, 0, 1], [1, 1, 0],
+                                               [2, 0, 0]])]
 
         for task, line, expected in subtests:
             with self.subTest('test_calculate__filled_line',

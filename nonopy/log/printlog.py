@@ -28,9 +28,10 @@ class PrintLog(Log):
 
         return nullcontext(init_line_end)
 
-    def collapse(self, order, index, *, count):
+    def collapse(self, order, index, *, count, line):
         str_index = repr_index(order, index)
-        print(f'collapse  start {str_index} count = {count}')
+        format_field_line = format_line(line, crossed='x')
+        print(f'collapse  start {str_index} count = {count} line = {format_field_line}')	     
 
         def collapse_end(diff=None):
             format_diff = format_line(diff, crossed="x")
@@ -38,9 +39,10 @@ class PrintLog(Log):
 
         return nullcontext(collapse_end)
 
-    def filter(self, order, index, *, count):
+    def filter(self, order, index, *, count, line):
         str_index = repr_index(order, index)
-        print(f'filter    start {str_index} count = {count} -> ...')
+        format_field_line = format_line(line, crossed='x')
+        print(f'filter    start {str_index} count = {count} -> ... line = {format_field_line}')
 
         def filter_end(count_after=None):
             print(f'{end()} {str_index} count = {count} -> {count_after}')

@@ -2,7 +2,7 @@ import numpy as np
 import textwrap as text
 
 import nonopy.line.dline as dline
-from nonopy.line import Line
+from nonopy.zline import Line
 from nonopy.cell import Cell
 from nonopy.field import Field
 from nonopy.hotheap import Hotheap
@@ -66,7 +66,7 @@ class Solver():
                     log_filter_end(count_after=n_lines_out)
 
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
-                    collapsed_line, n_lines_in = line.collapse(field_line)
+                    collapsed_line, n_lines_in = line.collapse()
                     diff, _ = dline.diff(collapsed_line, field_line)
 
                     self.metrics.add_line_instantiation('collapse', n_lines_in)
