@@ -18,7 +18,7 @@ class Metrics:
     def set_comlexity(self, combinations):
         self.complexity = sum(line.count for lines in combinations.values() for line in lines)
 
-    def add_line_instantiation(self, operation, count):
+    def add_n_combinations(self, operation, count):
         self.line_instantiation['sum'] += count
         self.line_instantiation[operation] += count
         self.operations[operation] += 1
@@ -26,7 +26,7 @@ class Metrics:
     def inc_cycle(self):
         self.cycles += 1
 
-    def get_line_instantiation(self, *keys):
+    def get_n_combinations(self, *keys):
         return [self.line_instantiation[k] for k in keys]
     
     def get_operations(self, *keys):

@@ -1,21 +1,21 @@
 import gc
 import numpy as np
+from typing import List
 
-import nonopy.yline.combinations as combinations
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
-from nonopy.yline.iter import not_none
-from nonopy.format import format_line
+from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate, collapse, calculate_moves, calculate_count
+from nonopy.line.iter import not_none
+from nonopy.line.fieldline import FieldLine
+from nonopy.line.task import Task
 
-
-class Line:
-    def __init__(self, task, length):
+class TaskLine:
+    def __init__(self, task: Task, length: int):
         self.task = task
         self.length = length
-        self.combinations = None
-        self.count = combinations.calculate_count(task, length)
-        self.init_hot = combinations.calculate_hottask(task, length)
+        self.count = calculate_count(task, length)
+        self.init_hot = calculate_hottask(task, length)
 
-    def collapse(self, field_line):
+    def collapse(self, field_line: FieldLine):
         """Performs collapse operation and returns diff with the line"""
         before_count = self.count
 
@@ -23,23 +23,18 @@ class Line:
 
         return collapsed, before_count
 
-    def __sub_collapse(self, task, field_line):
-        def can_be_filled(tsk, ln):
-            if len(tsk) > 0:
-                return combinations.calculate_moves(tsk, len(ln)) >= 0
-            else:
-                return (ln != Cell.FILLED).all()
-
-        def reduce_collapsed(combinations):
+    def __sub_collapse(self, task: Task, field_line: FieldLine):
+        def reduce_collapsed(collapsed_lines):
             '''Combine results from multiple divisions
             Args:
                 combinations (list[(nparray, int)])
             '''
-            if len(combinations) == 0:
+            if len(collapsed_lines) == 0:
                 return field_line.to_array(), 0
 
-            count = sum(n for _, n in combinations)
-            collapsed = np.array([col for col, _ in combinations], Cell.dtype)
+            count = sum(n for _, n in collapsed_lines)
+            collapsed = np.array([col for col, _ in collapsed_lines],
+                                 Cell.dtype)
 
             reduced = (Cell.FILLED if
                        (column == Cell.FILLED).all() else Cell.CROSSED if
@@ -48,7 +43,7 @@ class Line:
 
             return np.fromiter(reduced, Cell.dtype, len(field_line)), count
 
-        def divide_by_x(x_index):
+        def divide_by_crossed(x_index):
             left_line, left_l_n, left_r_n = field_line[:x_index].trim_x()
             right_line, right_l_n, right_r_n = field_line[x_index:].trim_x()
 
@@ -148,13 +143,14 @@ class Line:
             return np.full(len(field_line), Cell.CROSSED, Cell.dtype), 1
 
         if (middle_x := field_line.find_center_x()) != None:
-            return divide_by_x(middle_x)
+            return divide_by_crossed(middle_x)
 
         if (middle_f := field_line.find_center_filled()) != None:
             return divide_by_filled(middle_f)
 
-        combs = combinations.calculate(task, field_line)
-        if len(combs) == 0:
-            return field_line, 0
-
-        return combinations.collapse(task, combs, len(field_line)), len(combs)
+        if calculate_hottask(task, len(field_line)):
+            combs = calculate(task, len(field_line))
+            return collapse(task, combs, len(field_line)), len(combs)
+        else:
+            return np.full(len(field_line), Cell.EMPTY,
+                           Cell.dtype), calculate_count(task, len(field_line))

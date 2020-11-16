@@ -1,6 +1,8 @@
 import numpy as np
 
 from nonopy.cell import Cell
+from nonopy.line import FieldLine
+
 
 def stoline(line: str):
     map = {
@@ -13,6 +15,5 @@ def stoline(line: str):
     imapped = (map.get(ch, Cell.EMPTY) for ch in line)
     return np.fromiter(imapped, Cell.dtype, len(line))
 
-
-def emptyline(length: int):
-    return np.full(length, Cell.EMPTY, Cell.dtype)
+def fline(line: str):
+    return FieldLine(stoline(line))

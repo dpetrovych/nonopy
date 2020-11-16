@@ -1,3 +1,5 @@
+import numpy as np
+
 from nonopy.cell import Cell
 from nonopy.format import format_line
 '''Operations over field line'''
@@ -68,3 +70,13 @@ class FieldLine:
 
     def to_array(self):
         return self.narray[:]
+
+    def diff(self, new_line):
+        if len(self.narray) != len(new_line):
+            raise Exception(f'Length mismatch: collapsed len {len(new_line)} != field line len {len(self.narray)}')
+
+        def __diffiter():
+            for new, old in zip(new_line, self.narray):
+                yield new if old == Cell.EMPTY else Cell.EMPTY
+        
+        return np.fromiter(__diffiter(), Cell.dtype, len(new_line))

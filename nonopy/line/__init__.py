@@ -1,3 +1,4 @@
 import numpy as np
 
-from .line import Line
+from .taskline import TaskLine
+from .fieldline import FieldLine

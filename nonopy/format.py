@@ -26,7 +26,7 @@ def format_grid(grid, empty=' ', crossed=' ', filled='█', width = 2):
 def format_stats(solutions, filename=''):
     rows = [
         'status', 'init', 'solve', 'complexity', 'cycles',
-        'line_instantiations', '-collapse', 'operations',
+        'n_combinations', '-collapse', 'operations',
         '-collapse',
     ]
 
@@ -40,7 +40,7 @@ def format_stats(solutions, filename=''):
             m.complexity,
             m.cycles,
             None,
-            *m.get_line_instantiation('collapse'),
+            *m.get_n_combinations('collapse'),
             None,
             *m.get_operations('collapse'),
         ) for _, (_, s, m, p) in solutions))
