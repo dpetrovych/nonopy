@@ -4,7 +4,6 @@ from itertools import islice, tee
 from nonopy.cell import Cell, MIN_BLOCK_SPACE
 from nonopy.format import format_line
 import nonopy.line.cline as cline
-from nonopy.yline.fline import find_center_x, trim_x
 from nonopy.yline.task import find_weight_center
 
 
@@ -81,7 +80,7 @@ def calculate(task, line):
         return []
 
     if (line == Cell.CROSSED).any():
-        raise Exception('Should not contain CROSSED cell')
+        raise Exception(f'Should not contain CROSSED cell: {line}')
 
     block_pos_pairs = rec_block_tigth_positions(task)
 

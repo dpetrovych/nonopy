@@ -26,8 +26,8 @@ def format_grid(grid, empty=' ', crossed=' ', filled='█', width = 2):
 def format_stats(solutions, filename=''):
     rows = [
         'status', 'init', 'solve', 'complexity', 'cycles',
-        'line_instantiations', '-collapse', '-filter', '-sum', 'operations',
-        '-collapse', '-filter'
+        'line_instantiations', '-collapse', 'operations',
+        '-collapse',
     ]
 
     headers = [filename, *(k for k, _ in solutions)]
@@ -40,9 +40,9 @@ def format_stats(solutions, filename=''):
             m.complexity,
             m.cycles,
             None,
-            *m.get_line_instantiation('collapse', 'filter', 'sum'),
+            *m.get_line_instantiation('collapse'),
             None,
-            *m.get_operations('collapse', 'filter'),
+            *m.get_operations('collapse'),
         ) for _, (_, s, m, p) in solutions))
 
     print(tabulate(table, headers=headers))

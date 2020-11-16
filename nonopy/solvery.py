@@ -3,6 +3,7 @@ import textwrap as text
 
 import nonopy.line.dline as dline
 from nonopy.yline import Line
+from nonopy.yline.fline import FieldLine
 from nonopy.cell import Cell
 from nonopy.field import Field
 from nonopy.hotheap import Hotheap
@@ -57,7 +58,7 @@ class Solver():
                 self.metrics.inc_cycle()
                 
                 order, index, line = self.heap.pop()
-                field_line = self.field.get_line(order, index)
+                field_line = FieldLine(self.field.get_line(order, index))
 
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
                     collapsed_line, n_lines_in = line.collapse(field_line)
