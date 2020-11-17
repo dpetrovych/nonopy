@@ -4,6 +4,7 @@ from typing import List
 
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
 from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate_moves, calculate_count
+from nonopy.line.collapsed import CollapseResult, reduce_collapsed
 from nonopy.line.iter import not_none
 from nonopy.line.fieldline import FieldLine
 
@@ -21,30 +22,12 @@ class TaskLine:
         """Performs collapse operation and returns diff with the line"""
         before_count = self.count
 
-        collapsed, self.count = self.__sub_collapse(self.task, field_line)
+        result = self.__sub_collapse(self.task, field_line)
+        self.count = result.count
 
-        return collapsed, before_count
+        return result.line, before_count
 
     def __sub_collapse(self, task: Task, field_line: FieldLine):
-        def reduce_collapsed(collapsed_lines):
-            '''Combine results from multiple divisions
-            Args:
-                combinations (list[(nparray, int)])
-            '''
-            if len(collapsed_lines) == 0:
-                return field_line.to_array(), 0
-
-            count = sum(n for _, n in collapsed_lines)
-            collapsed = np.array([col for col, _ in collapsed_lines],
-                                 Cell.dtype)
-
-            reduced = (Cell.FILLED if
-                       (column == Cell.FILLED).all() else Cell.CROSSED if
-                       (column == Cell.CROSSED).all() else Cell.EMPTY
-                       for column in collapsed.T)
-
-            return np.fromiter(reduced, Cell.dtype, len(field_line)), count
-
         def divide_by_crossed(x_index):
             left_line, left_l_n, left_r_n = field_line[:x_index].trim_x()
             right_line, right_l_n, right_r_n = field_line[x_index:].trim_x()
@@ -55,27 +38,26 @@ class TaskLine:
                         or not can_be_filled(right_task, right_line)):
                     return None
 
-                left_collapsed, l_count = self.__sub_collapse(
-                    left_task, left_line)
-                right_collapsed, r_count = self.__sub_collapse(
-                    right_task, right_line)
+                left_result = self.__sub_collapse(left_task, left_line)
+                right_result = self.__sub_collapse(right_task, right_line)
 
-                total_count = l_count * r_count
+                total_count = left_result.count * right_result.count
                 if total_count == 0:
                     return None
 
-                seq = [
-                    *Cells.x(left_l_n), *left_collapsed, *Cells.x(-left_r_n),
-                    *Cells.x(right_l_n), *right_collapsed, *Cells.x(-right_r_n)
-                ]
-
-                return np.array(seq, Cell.dtype), total_count
+                return CollapseResult.join(*Cells.x(left_l_n),
+                                           *left_result.line,
+                                           *Cells.x(-left_r_n),
+                                           *Cells.x(right_l_n),
+                                           *right_result.line,
+                                           *Cells.x(-right_r_n),
+                                           count=total_count)
 
             division_results = [
                 *not_none(task_division(i) for i in range(len(task), -1, -1))
             ]
 
-            return reduce_collapsed(division_results)
+            return reduce_collapsed(division_results, field_line)
 
         def divide_by_filled(f_end):
             def task_division(block_index, block_pos):
@@ -105,21 +87,19 @@ class TaskLine:
                         or not can_be_filled(right_task, right_line)):
                     return None
 
-                left_collapsed, l_count = self.__sub_collapse(
-                    left_task, left_line)
-                right_collapsed, r_count = self.__sub_collapse(
-                    right_task, right_line)
+                left_result = self.__sub_collapse(left_task, left_line)
+                right_result = self.__sub_collapse(right_task, right_line)
 
-                total_count = l_count * r_count
+                total_count = left_result.count * right_result.count
                 if total_count == 0:
                     return None
 
-                seq = [
-                    *left_collapsed, *Cells.x(left_bum), *Cells.f(block),
-                    *Cells.x(right_bum), *right_collapsed
-                ]
-
-                return np.array(seq, Cell.dtype), total_count
+                return CollapseResult.join(*left_result.line,
+                                           *Cells.x(left_bum),
+                                           *Cells.f(block),
+                                           *Cells.x(right_bum),
+                                           *right_result.line,
+                                           count=total_count)
 
             f_start = f_end - 1
             while f_start > 0 and field_line[f_start - 1] == Cell.FILLED:
@@ -139,15 +119,16 @@ class TaskLine:
                     for pos in range(pos_start, pos_end + 1))
             ]
 
-            return reduce_collapsed(division_results)
+            return reduce_collapsed(division_results, field_line)
 
         def inplace():
-            line = np.full(len(field_line), Cell.EMPTY, Cell.dtype)
             move_space = calculate_moves(task, len(field_line))
-            count = calculate_count(task, len(field_line))
+            if len(task) == 1 and move_space == 0:
+                return CollapseResult.filled(len(field_line), 1)
 
+            count = calculate_count(task, len(field_line))
             if move_space >= max(task):
-                return line, count
+                return CollapseResult.empty(len(field_line), count)
 
             def stack_left_ends():
                 start = 0
@@ -167,11 +148,12 @@ class TaskLine:
                 for i in range(start, end)
             ]
 
+            line = np.full(len(field_line), Cell.EMPTY, Cell.dtype)
             line[filled_indecies] = Cell.FILLED
-            return line, count
+            return CollapseResult(line, count)
 
         if len(task) == 0 or (len(task) == 1 and task[0] == 0):
-            return np.full(len(field_line), Cell.CROSSED, Cell.dtype), 1
+            return CollapseResult.crossed(len(field_line), 1)
 
         if (middle_x := field_line.find_center_crossed()) != None:
             return divide_by_crossed(middle_x)
