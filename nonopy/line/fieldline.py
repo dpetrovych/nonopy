@@ -57,7 +57,7 @@ class FieldLine:
                 return len(self.narray) - left_i
         return None
 
-    def find_center_x(self):
+    def find_center_crossed(self):
         return self.__find_center(Cell.CROSSED)
 
     def find_center_filled(self):

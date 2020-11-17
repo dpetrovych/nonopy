@@ -3,7 +3,6 @@ from itertools import islice, tee
 
 from nonopy.cell import Cell, MIN_BLOCK_SPACE
 from nonopy.format import format_line
-import nonopy.line.cline as cline
 from nonopy.line.task import find_weight_center
 
 
@@ -58,39 +57,3 @@ def calculate_count(task, length):
     return sum(
         dleft * right
         for dleft, right in zip(__iderivative(left_counts), right_counts))
-
-
-def calculate(task, length):
-    """
-    Calculates all combination of spans for specific task.
-
-    Since combinations are lazy-calculated, the field may be already partially solved,
-    so line is provided to avoid combinations that are eliminated.
-    """
-    if len(task) == 0:
-        return []
-
-    head, tail = task[0], task[1:]
-
-    if not tail:
-        return [[step] for step in range(length - head + 1)]
-
-    move_space = calculate_moves(tail, length - head)
-
-    head_steps = ((step, step + head + 1) for step in range(move_space))
-    return [[hstep, *tsteps] for hstep, trim in head_steps
-            for tsteps in calculate(tail, length - trim)]
-
-
-def collapse(task, combinations, length):
-    """
-    Returns defined cells based on all combination
-    Undefined cells marked as Cell.EMPTY (-1)
-    """
-    mask = np.zeros(length, np.int32)
-    for steps in combinations:
-        line = cline.array(task, steps, length)
-        mask = np.add(mask, line)
-
-    empty_or_filled, filled = mask > 0, mask == len(combinations)
-    return Cell.EMPTY * empty_or_filled + (Cell.FILLED - Cell.EMPTY) * filled

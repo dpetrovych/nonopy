@@ -3,10 +3,11 @@ import numpy as np
 from typing import List
 
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
-from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate, collapse, calculate_moves, calculate_count
+from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate_moves, calculate_count
 from nonopy.line.iter import not_none
 from nonopy.line.fieldline import FieldLine
 from nonopy.line.task import Task
+
 
 class TaskLine:
     def __init__(self, task: Task, length: int):
@@ -139,18 +140,41 @@ class TaskLine:
 
             return reduce_collapsed(division_results)
 
-        if len(task) == 0:
+        def inplace():
+            line = np.full(len(field_line), Cell.EMPTY, Cell.dtype)
+            move_space = calculate_moves(task, len(field_line))
+
+            if move_space >= max(task):
+                return line, calculate_count(task, len(field_line))
+
+            def stack_left_ends():
+                start = 0
+                for block in task:
+                    yield start + block
+                    start += block + MIN_BLOCK_SPACE
+
+            def stack_right_starts():
+                start = move_space
+                for block in task:
+                    yield start
+                    start += block + MIN_BLOCK_SPACE
+
+            filled_indecies = [
+                i
+                for start, end in zip(stack_right_starts(), stack_left_ends())
+                for i in range(start, end)
+            ]
+
+            line[filled_indecies] = Cell.FILLED
+            return line, 1
+
+        if len(task) == 0 or (len(task) == 1 and task[0] == 0):
             return np.full(len(field_line), Cell.CROSSED, Cell.dtype), 1
 
-        if (middle_x := field_line.find_center_x()) != None:
+        if (middle_x := field_line.find_center_crossed()) != None:
             return divide_by_crossed(middle_x)
 
         if (middle_f := field_line.find_center_filled()) != None:
             return divide_by_filled(middle_f)
 
-        if calculate_hottask(task, len(field_line)):
-            combs = calculate(task, len(field_line))
-            return collapse(task, combs, len(field_line)), len(combs)
-        else:
-            return np.full(len(field_line), Cell.EMPTY,
-                           Cell.dtype), calculate_count(task, len(field_line))
+        return inplace()
