@@ -75,6 +75,5 @@ class TaskLineShould(TestCase):
                 '|             x                    1 1  11                                  |'
             ))
         self.assertEquals(before_count, 886322710)
-        self.assertEquals(line.count, 177572755)
-        # self.assertEquals(line.count, 177581035) by true combinations measure
+        self.assertEquals(line.count, 177581035)
         

@@ -6,7 +6,8 @@ from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
 from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate_moves, calculate_count
 from nonopy.line.iter import not_none
 from nonopy.line.fieldline import FieldLine
-from nonopy.line.task import Task
+
+Task = List[int]
 
 
 class TaskLine:
@@ -143,9 +144,10 @@ class TaskLine:
         def inplace():
             line = np.full(len(field_line), Cell.EMPTY, Cell.dtype)
             move_space = calculate_moves(task, len(field_line))
+            count = calculate_count(task, len(field_line))
 
             if move_space >= max(task):
-                return line, calculate_count(task, len(field_line))
+                return line, count
 
             def stack_left_ends():
                 start = 0
@@ -166,7 +168,7 @@ class TaskLine:
             ]
 
             line[filled_indecies] = Cell.FILLED
-            return line, 1
+            return line, count
 
         if len(task) == 0 or (len(task) == 1 and task[0] == 0):
             return np.full(len(field_line), Cell.CROSSED, Cell.dtype), 1

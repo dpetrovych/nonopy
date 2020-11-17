@@ -5,5 +5,6 @@ __solvers = {
     'A': SolverA,
 }
 
+
 def get_solver(key='A'):
     return __solvers[key]
