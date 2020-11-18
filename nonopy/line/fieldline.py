@@ -5,22 +5,6 @@ from nonopy.format import format_line
 '''Operations over field line'''
 
 
-def triml_x(line):
-    left_i = 0
-    while left_i < len(line) and line[left_i] == Cell.CROSSED:
-        left_i += 1
-    return left_i
-
-
-def trimr_x(line, left_stop):
-    right_i = 0
-    while -right_i < (len(line) - left_stop) and line[right_i -
-                                                      1] == Cell.CROSSED:
-        right_i -= 1
-
-    return right_i if right_i < 0 else None
-
-
 class FieldLine:
     def __init__(self, narray):
         self.narray = (narray
@@ -61,29 +45,25 @@ class FieldLine:
                 return len(self.narray) - left_i
         return None
 
-    def find_center_crossed(self):
-        return self.__find_center(Cell.CROSSED)
-
-    def find_center_block_filled(self):
-        f_end = self.__find_center(Cell.FILLED)
+    def __find_center_block(self, cell):
+        f_end = self.__find_center(cell)
         if f_end is None:
-            return None, None
-            
+            return None, f_end
+
         f_start = f_end - 1
-        while f_start > 0 and self.narray[f_start - 1] == Cell.FILLED:
+        while f_start > 0 and self.narray[f_start - 1] == cell:
             f_start -= 1
 
-        while f_end < len(self.narray) and self.narray[f_end] == Cell.FILLED:
+        while f_end < len(self.narray) and self.narray[f_end] == cell:
             f_end += 1
-        
+
         return f_start, f_end
 
+    def find_center_crossed(self):
+        return self.__find_center_block(Cell.CROSSED)
 
-    def trim_x(self):
-        left_i = triml_x(self.narray)
-        right_i = trimr_x(self.narray, left_i)
-        return FieldLine(self.narray[left_i:right_i]
-                         ), left_i, right_i if right_i is not None else 0
+    def find_center_filled(self):
+        return self.__find_center_block(Cell.FILLED)
 
     def diff(self, new_line):
         if len(self.narray) != len(new_line):

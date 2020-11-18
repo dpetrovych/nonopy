@@ -32,24 +32,18 @@ class TaskLine:
     def __sub_collapse(self, task: Task, field_line: FieldLine):
         run = PrioritizedRun(self.__sub_collapse)
 
-        def divide_by_crossed(x_index):
-            left_line, left_l_n, left_r_n = field_line[:x_index].trim_x()
-            right_line, right_l_n, right_r_n = field_line[x_index:].trim_x()
-
+        def divide_by_crossed(x_start, x_end):
             def task_division(i):
                 left_result, right_result, total_count = run(
-                    left=CollapseRun(task[:i], left_line),
-                    right=CollapseRun(task[i:], right_line))
+                    left=CollapseRun(task[:i], field_line[:x_start]),
+                    right=CollapseRun(task[i:], field_line[x_end:]))
 
                 if total_count == 0:
                     return None
 
-                return CollapseResult.join(*Cells.x(left_l_n),
-                                           *left_result.line,
-                                           *Cells.x(-left_r_n),
-                                           *Cells.x(right_l_n),
+                return CollapseResult.join(*left_result.line,
+                                           *Cells.x(x_end - x_start),
                                            *right_result.line,
-                                           *Cells.x(-right_r_n),
                                            count=total_count)
 
             division_results = (task_division(i)
@@ -88,8 +82,7 @@ class TaskLine:
                                            *Cells.f(block),
                                            *Cells.x(right_bum),
                                            *right_result.line,
-                                           count=left_result.count *
-                                           right_result.count)
+                                           count=total_count)
 
             blocks_placement = [(i, f_end - block, f_start)
                                 for i, block in enumerate(task)
@@ -134,11 +127,10 @@ class TaskLine:
         if len(task) == 0 or (len(task) == 1 and task[0] == 0):
             return CollapseResult.crossed(len(field_line), 1)
 
-        if (middle_x := field_line.find_center_crossed()) != None:
-            return divide_by_crossed(middle_x)
+        if (pos_x := field_line.find_center_crossed()) != (None, None):
+            return divide_by_crossed(*pos_x)
 
-        if (pos_f := field_line.find_center_block_filled()) != (None, None):
-            f_start, f_end = pos_f
-            return divide_by_filled(f_start, f_end)
+        if (pos_f := field_line.find_center_filled()) != (None, None):
+            return divide_by_filled(*pos_f)
 
         return inplace()
