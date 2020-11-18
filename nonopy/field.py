@@ -29,7 +29,7 @@ class Field:
             self.grid[:, index] = merge(self.grid[:, index])
 
     def get_line(self, order, index):
-        if order == 'r':
-            return self.grid[index]
-        elif order == 'c':
-            return self.grid[:, index]
+        line = self.grid[index] if order == 'r' else self.grid[:, index]
+        line = line.copy()
+        line.setflags(write=0)
+        return line

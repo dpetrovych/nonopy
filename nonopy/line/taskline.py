@@ -1,14 +1,16 @@
 import gc
 import numpy as np
+from collections import namedtuple
 from typing import List
 
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
-from nonopy.line.combinations import can_be_filled, calculate_hottask, calculate_moves, calculate_count
+from nonopy.line.combinations import calculate_hottask, calculate_moves, calculate_count
 from nonopy.line.collapsed import CollapseResult, reduce_collapsed
-from nonopy.line.iter import not_none
 from nonopy.line.fieldline import FieldLine
+from nonopy.line.prioritizer import PrioritizedRun
 
 Task = List[int]
+CollapseRun = namedtuple('CollapseRun', ['task', 'line'])
 
 
 class TaskLine:
@@ -28,20 +30,17 @@ class TaskLine:
         return result.line, before_count
 
     def __sub_collapse(self, task: Task, field_line: FieldLine):
+        run = PrioritizedRun(self.__sub_collapse)
+
         def divide_by_crossed(x_index):
             left_line, left_l_n, left_r_n = field_line[:x_index].trim_x()
             right_line, right_l_n, right_r_n = field_line[x_index:].trim_x()
 
             def task_division(i):
-                left_task, right_task = task[:i], task[i:]
-                if (not can_be_filled(left_task, left_line)
-                        or not can_be_filled(right_task, right_line)):
-                    return None
+                left_result, right_result, total_count = run(
+                    left=CollapseRun(task[:i], left_line),
+                    right=CollapseRun(task[i:], right_line))
 
-                left_result = self.__sub_collapse(left_task, left_line)
-                right_result = self.__sub_collapse(right_task, right_line)
-
-                total_count = left_result.count * right_result.count
                 if total_count == 0:
                     return None
 
@@ -53,13 +52,11 @@ class TaskLine:
                                            *Cells.x(-right_r_n),
                                            count=total_count)
 
-            division_results = [
-                *not_none(task_division(i) for i in range(len(task), -1, -1))
-            ]
+            division_results = (task_division(i)
+                                for i in range(len(task), -1, -1))
+            return reduce_collapsed(division_results, len(field_line))
 
-            return reduce_collapsed(division_results, field_line)
-
-        def divide_by_filled(f_end):
+        def divide_by_filled(f_start, f_end):
             def task_division(block_index, block_pos):
                 def bum(cond):
                     return MIN_BLOCK_SPACE if cond else 0
@@ -72,25 +69,17 @@ class TaskLine:
                 left_edge = block_pos - left_bum
                 right_edge = block_end + right_bum
 
-                if (left_edge < 0 or right_edge > len(field_line)
-                        or field_line[left_edge:block_pos] == Cell.FILLED
-                        or field_line[block_end:right_edge] == Cell.FILLED):
+                if (left_edge < 0 or right_edge > len(field_line) or
+                    (field_line[left_edge:block_pos] == Cell.FILLED).any() or
+                    (field_line[block_end:right_edge] == Cell.FILLED).any()):
                     return None
 
-                left_task = task[:block_index]
-                right_task = task[block_index + 1:]
+                left_result, right_result, total_count = run(
+                    left=CollapseRun(task[:block_index],
+                                     field_line[:left_edge]),
+                    right=CollapseRun(task[block_index + 1:],
+                                      field_line[right_edge:]))
 
-                left_line = field_line[:left_edge]
-                right_line = field_line[right_edge:]
-
-                if (not can_be_filled(left_task, left_line)
-                        or not can_be_filled(right_task, right_line)):
-                    return None
-
-                left_result = self.__sub_collapse(left_task, left_line)
-                right_result = self.__sub_collapse(right_task, right_line)
-
-                total_count = left_result.count * right_result.count
                 if total_count == 0:
                     return None
 
@@ -99,27 +88,17 @@ class TaskLine:
                                            *Cells.f(block),
                                            *Cells.x(right_bum),
                                            *right_result.line,
-                                           count=total_count)
-
-            f_start = f_end - 1
-            while f_start > 0 and field_line[f_start - 1] == Cell.FILLED:
-                f_start -= 1
-
-            while f_end < len(field_line) and field_line[f_end] == Cell.FILLED:
-                f_end += 1
+                                           count=left_result.count *
+                                           right_result.count)
 
             blocks_placement = [(i, f_end - block, f_start)
                                 for i, block in enumerate(task)
                                 if block >= (f_end - f_start)]
 
-            division_results = [
-                *not_none(
-                    task_division(i, pos)
-                    for i, pos_start, pos_end in blocks_placement
-                    for pos in range(pos_start, pos_end + 1))
-            ]
-
-            return reduce_collapsed(division_results, field_line)
+            division_results = (task_division(i, pos)
+                                for i, pos_start, pos_end in blocks_placement
+                                for pos in range(pos_start, pos_end + 1))
+            return reduce_collapsed(division_results, len(field_line))
 
         def inplace():
             move_space = calculate_moves(task, len(field_line))
@@ -158,7 +137,8 @@ class TaskLine:
         if (middle_x := field_line.find_center_crossed()) != None:
             return divide_by_crossed(middle_x)
 
-        if (middle_f := field_line.find_center_filled()) != None:
-            return divide_by_filled(middle_f)
+        if (pos_f := field_line.find_center_block_filled()) != (None, None):
+            f_start, f_end = pos_f
+            return divide_by_filled(f_start, f_end)
 
         return inplace()

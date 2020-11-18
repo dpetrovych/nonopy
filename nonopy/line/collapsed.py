@@ -31,27 +31,22 @@ class CollapseResult:
     def filled(cls, length, count):
         return cls(np.full(length, Cell.FILLED, Cell.dtype), count)
 
-    @classmethod
-    def none(cls, line):
-        return cls(line, 0)
 
-
-def reduce_collapsed(collapsed_lines: List[CollapseResult],
-                     field_line: FieldLine):
+def reduce_collapsed(collapsed_results: List[CollapseResult], length: int):
     '''Combine results from multiple divisions
     Args:
         combinations (list[(nparray, int)])
     '''
-    if len(collapsed_lines) == 0:
-        return CollapseResult.none(field_line.to_array())
+    collapsed_results = [*filter(lambda result: result is not None, collapsed_results)]
+    if len(collapsed_results) == 0:
+        return None
 
-    count = sum(l.count for l in collapsed_lines)
-    collapsed = np.array([l.line for l in collapsed_lines], Cell.dtype)
+    count = sum(l.count for l in collapsed_results)
+    collapsed = np.array([l.line for l in collapsed_results], Cell.dtype)
 
     reduced = (Cell.FILLED if
                (column == Cell.FILLED).all() else Cell.CROSSED if
                (column == Cell.CROSSED).all() else Cell.EMPTY
                for column in collapsed.T)
 
-    return CollapseResult(np.fromiter(reduced, Cell.dtype, len(field_line)),
-                          count)
+    return CollapseResult(np.fromiter(reduced, Cell.dtype, length), count)

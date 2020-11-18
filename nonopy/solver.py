@@ -59,10 +59,10 @@ class Solver():
                 field_line = FieldLine(self.field.get_line(order, index))
 
                 with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
-                    collapsed_line, n_combinations_in = line.collapse(field_line)
+                    collapsed_line, _ = line.collapse(field_line)
                     diff = field_line.diff(collapsed_line)
 
-                    self.metrics.add_n_combinations('collapse', n_combinations_in)
+                    self.metrics.add_operation('collapse')
                     log_collapse_end(diff = diff)
                 
                 self.field.apply(order, index, collapsed_line)

@@ -16,13 +16,6 @@ def calculate_hottask(task, length):
     return calculate_moves(task, length) < max_block
 
 
-def can_be_filled(task, field_line):
-    if len(task) > 0:
-        return calculate_moves(task, len(field_line)) >= 0
-    else:
-        return (field_line != Cell.FILLED).all()
-
-
 def __iderivative(iterator, start=0):
     prev = start
     for item in iterator:
