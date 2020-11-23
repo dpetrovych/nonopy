@@ -25,7 +25,7 @@ parser.add_argument('--verbose',
                     '-v',
                     action='count',
                     default=0,
-                    help='shows actions')
+                    help='shows actions log')
 
 parser.add_argument('--interactive',
                     '-i',
