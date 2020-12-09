@@ -14,7 +14,8 @@ CollapseRun = namedtuple('CollapseRun', ['task', 'line'])
 
 
 class TaskLine:
-    def __init__(self, task: Task, length: int):
+    def __init__(self, id: str, task: Task, length: int):
+        self.id = id
         self.task = task
         self.length = length
         self.count = calculate_count(task, length)

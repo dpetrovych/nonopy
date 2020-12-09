@@ -1,25 +1,46 @@
 from collections import defaultdict
 
+
 class Metrics:
     def __init__(self):
-        self.complexity = 0
-        self.operations = defaultdict(lambda: 0)
-        self.cycles = 0
+        self.count = defaultdict(lambda: 0)
+        self.values = defaultdict(lambda: [])
+        self.values_sum = defaultdict(lambda: 0)
 
-    def __repr__(self):
-        return '\n'.join([f'complexity = {self.complexity}',
-                          'operations:',
-                          *(f'  {k.ljust(8)} = {v}'for k, v in self.operations.items()),
-                          f'cycles = {self.cycles}'])
 
-    def set_comlexity(self, combinations):
-        self.complexity = sum(line.count for lines in combinations.values() for line in lines)
+    def add_event(self, event_id):
+        """Keeps track of events/operations count total
 
-    def add_operation(self, operation):
-        self.operations[operation] += 1
+        Args:
+            event_id (str|list): event id or event id parts
+        """
+        if isinstance(event_id, str):
+            event_id = [event_id]
 
-    def inc_cycle(self):
-        self.cycles += 1
+        if len(event_id) > 0:
+            k = None
+            for eid in event_id:
+                k = eid if k is None else k + '.' + eid
+                self.count[k] += 1
+
+
+    def add_value(self, key, value):
+        if isinstance(key, str):
+            key = [key]
+
+        if len(key) > 0:
+            k = None
+            for next_k in key:
+                k = next_k if k is None else k + '.' + next_k
+                self.values[k].append(value)
+                self.values_sum[k] += value
     
-    def get_operations(self, *keys):
-        return [self.operations[k] for k in keys]
+
+    def get_event_count(self, *keys):
+        return [self.count[k] for k in keys]
+
+    def get_values(self, key):
+        return self.values[key]
+
+    def get_value_sum(self, *keys):
+        return [self.values_sum[k] for k in keys]

@@ -49,7 +49,7 @@ def solve(Solver):
     with logger as log:
         solver = Solver(nonogram.task, log=log)
         grid = solver.solve()
-        return grid, solver.status, solver.metrics, solver.perf
+        return grid, solver.status, solver.metrics
 
 
 solutions = [(k, solve(get_solver(k))) for k in args.solvers]

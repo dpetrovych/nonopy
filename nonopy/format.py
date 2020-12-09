@@ -25,12 +25,11 @@ def format_grid(grid, empty=' ', crossed=' ', filled='█', width=2):
 def format_stats(solutions, filename=''):
     rows = [
         'status',
-        'init',
-        'solve',
+        't init',
+        't solve',
         'complexity',
-        'cycles',
-        'operations',
-        '-collapse',
+        '# init',
+        '# collapse',
     ]
 
     headers = [filename, *(k for k, _ in solutions)]
@@ -38,12 +37,21 @@ def format_stats(solutions, filename=''):
         rows,
         *((
             s,
-            p.fvalue('init'),
-            p.fvalue('solve'),
-            m.complexity,
-            m.cycles,
-            None,
-            *m.get_operations('collapse'),
-        ) for _, (_, s, m, p) in solutions))
+            *(format_ns_time(t) for t in m.get_value_sum('init.time', 'collapse.time')),
+            m.get_values('complexity')[0],
+            *m.get_event_count('init', 'collapse'),
+        ) for _, (_, s, m) in solutions))
 
     print(tabulate(table, headers=headers))
+
+def format_ns_time(t_ns):
+    """Formats time to millisecond float value
+
+    Args:
+        t (int): time in nanoseconds
+    
+    Returns:
+        str
+    """
+    t_ms = t_ns / 1_000_000
+    return f'{t_ms:.0f} ms'
