@@ -58,7 +58,7 @@ class Solver():
                 order, index, line = self.heap.pop()
                 field_line = FieldLine(self.field.get_line(order, index))
 
-                with self.log.collapse(order, index, count=line.count, line=field_line) as log_collapse_end:
+                with self.log.collapse(order, index, task=line, line=field_line) as log_collapse_end:
                     collapsed_line, _ = line.collapse(field_line)
                     diff = field_line.diff(collapsed_line)
 

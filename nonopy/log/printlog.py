@@ -28,23 +28,17 @@ class PrintLog(Log):
 
         return nullcontext(init_line_end)
 
-    def collapse(self, order, index, *, count, line):
+    def collapse(self, order, index, *, task, line):
         str_index = repr_index(order, index)
         format_field_line = format_line(line, crossed='x')
-        print(f'collapse  start {str_index} count = {count} line = {format_field_line}')	     
+        start = perf_counter()
+        print(
+            f'collapse  start {str_index} line={format_field_line} cues={task.task} count= {task.count}'
+        )
 
         def collapse_end(diff=None):
             format_diff = format_line(diff, crossed="x")
-            print(f'{end()} {str_index} diff = {format_diff}')
+            dt = perf_counter() - start
+            print(f'{end()} {str_index} diff={format_diff}')
 
         return nullcontext(collapse_end)
-
-    def filter(self, order, index, *, count, line):
-        str_index = repr_index(order, index)
-        format_field_line = format_line(line, crossed='x')
-        print(f'filter    start {str_index} count = {count} -> ... line = {format_field_line}')
-
-        def filter_end(count_after=None):
-            print(f'{end()} {str_index} count = {count} -> {count_after}')
-
-        return nullcontext(filter_end)

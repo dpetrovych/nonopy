@@ -74,10 +74,10 @@ class CursesLog(Log):
 
         return nullcontext(init_end)
 
-    def collapse(self, order, index, *, count, line):
+    def collapse(self, order, index, *, task, line):
         format_field_line = format_line(line, crossed='x')
         self.append_log(
-            f'collapse  start {repr_index(order, index)} count = {count} line = {format_field_line}')
+            f'collapse  start {repr_index(order, index)} line={format_field_line} count= {task.count} ')
         self.refresh()
 
         def collapse_end(diff):
@@ -89,18 +89,3 @@ class CursesLog(Log):
             self.refresh()
 
         return nullcontext(collapse_end)
-
-    def filter(self, order, index, *, count, line):
-        format_field_line = format_line(line, crossed='x')
-        self.append_log(
-            f'filter    start {repr_index(order, index)} count = {count} -> ... line = {format_field_line}'
-        )
-        self.refresh()
-
-        def filter_end(count_after):
-            self.append_log(
-                f'{end()} {repr_index(order, index)} count ={count} -> {count_after}'
-            )
-            self.refresh()
-
-        return nullcontext(filter_end)

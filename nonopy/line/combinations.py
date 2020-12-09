@@ -41,11 +41,11 @@ def __calc_n(n, length):
     right_n = n - left_n
     minl, minr = 2 * left_n - 1, 2 * right_n - 1
 
-    maxl = length - minr
+    maxl = length - minr - 1
+    maxr = length - minl - 1
 
-    left_counts, right_counts = zip(*((__calc_n(left_n, cursor),
-                                       __calc_n(right_n, length - cursor - 1))
-                                      for cursor in range(minl, maxl)))
+    left_counts = (__calc_n(left_n, cursor) for cursor in range(minl, maxl + 1))
+    right_counts = (__calc_n(right_n, cursor) for cursor in range(maxr, minr - 1, -1))
 
     result = __calc_n_cache[(n, length)] = sum(
         dleft * right
