@@ -38,7 +38,7 @@ class Solver():
             start = perf_counter_ns()
 
             line_id = order + str(index)
-            line = TaskLine(line_id, task, length)
+            line = TaskLine(line_id, task, length, self.metrics)
 
             dt = perf_counter_ns() - start
             self.metrics.add_event(('init', line_id))
@@ -80,19 +80,12 @@ class Solver():
             Exception('solve already run')
 
         while self.heap.is_hot:
-
             order, index, line = self.heap.pop()
             field_line = FieldLine(self.field.get_line(order, index))
 
             with self.log.collapse(order, index, task=line, line=field_line) as log_collapse_end:
-                start = perf_counter_ns()
-
                 collapsed_line, _ = line.collapse(field_line)
                 diff = field_line.diff(collapsed_line)
-
-                dt = perf_counter_ns() - start
-                self.metrics.add_event(('collapse', line.id))
-                self.metrics.add_value(('collapse.time', line.id), dt)
                 log_collapse_end(diff=diff)
 
             self.field.apply(order, index, collapsed_line)

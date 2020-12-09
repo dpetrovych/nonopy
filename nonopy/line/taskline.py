@@ -1,6 +1,7 @@
 import gc
 import numpy as np
 from collections import namedtuple
+from time import perf_counter_ns
 from typing import List
 
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
@@ -8,32 +9,59 @@ from nonopy.line.combinations import calculate_hottask, calculate_moves, calcula
 from nonopy.line.collapsed import CollapseResult, reduce_collapsed
 from nonopy.line.fieldline import FieldLine
 from nonopy.line.prioritizer import PrioritizedRun
+from nonopy.metrics import Metrics
 
 Task = List[int]
 CollapseRun = namedtuple('CollapseRun', ['task', 'line'])
 
 
 class TaskLine:
-    def __init__(self, id: str, task: Task, length: int):
+    def __init__(self, id: str, task: Task, length: int, metrics: Metrics):
         self.id = id
         self.task = task
         self.length = length
         self.count = calculate_count(task, length)
         self.init_hot = calculate_hottask(task, length)
+        self.metrics = metrics
 
     def collapse(self, field_line: FieldLine):
-        """Performs collapse operation and returns diff with the line"""
-        before_count = self.count
+        """Performs collapse operation and returns diff with the line
 
+        Args:
+            field_line (FieldLine): represents current state of line on the field
+
+        Returns:
+            (CollapsedLine, int): tuple of a new state of the line and a new combinations count
+        """
+        start = perf_counter_ns()
+
+        before_count = self.count
         result = self.__sub_collapse(self.task, field_line)
         self.count = result.count
+
+        dt = perf_counter_ns() - start
+        self.metrics.add_event(('collapse', self.id))
+        self.metrics.add_value(('collapse.time', self.id), dt)
 
         return result.line, before_count
 
     def __sub_collapse(self, task: Task, field_line: FieldLine):
+        """Recursive function that calculates (collapses) all combinations of a segment of tasks 
+           on a specific segment of field line.
+
+        Args:
+            task (Task): line task or a segment of the task
+            field_line (FieldLine): line on the field or its continuos segment
+
+        Returns:
+            CollapseLine: a new state of a line or its segment
+        """
         run = PrioritizedRun(self.__sub_collapse)
 
         def divide_by_crossed(x_start, x_end):
+            self.metrics.add_event(
+                ('sub_collapse', 'divide_by_crossed', self.id))
+
             def task_division(i):
                 left_result, right_result, total_count = run(
                     left=CollapseRun(task[:i], field_line[:x_start]),
@@ -52,6 +80,9 @@ class TaskLine:
             return reduce_collapsed(division_results, len(field_line))
 
         def divide_by_filled(f_start, f_end):
+            self.metrics.add_event(
+                ('sub_collapse', 'divide_by_filled', self.id))
+
             def task_division(block_index, block_pos):
                 def bum(cond):
                     return MIN_BLOCK_SPACE if cond else 0
@@ -95,6 +126,7 @@ class TaskLine:
             return reduce_collapsed(division_results, len(field_line))
 
         def inplace():
+            self.metrics.add_event(('sub_collapse', 'inplace', self.id))
             move_space = calculate_moves(task, len(field_line))
             if len(task) == 1 and move_space == 0:
                 return CollapseResult.filled(len(field_line), 1)
