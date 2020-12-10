@@ -12,7 +12,7 @@ class CombinationsShould(TestCase):
         self.assertEqual(count_2_4, 3)
         self.assertEqual(count_1_3, 3)
 
-    def test_count_2block__emptyline(self):
+    def test_count__2block(self):
         count_2_2__6 = calculate_count([2, 2], 6)
         count_2_1__5 = calculate_count([2, 1], 5)
         count_1_1__4 = calculate_count([1, 1], 4)
@@ -20,6 +20,6 @@ class CombinationsShould(TestCase):
         self.assertEqual(count_2_1__5, 3)
         self.assertEqual(count_1_1__4, 3)
 
-    def test_count_4block(self):
+    def test_count__4block(self):
         count = calculate_count([6, 2, 16, 1], 35)
-        self.assertEquals(count, 330)
+        self.assertEqual(count, 330)

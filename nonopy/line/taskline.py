@@ -31,11 +31,10 @@ class TaskLine:
             field_line (FieldLine): represents current state of line on the field
 
         Returns:
-            (CollapsedLine, int): tuple of a new state of the line and a new combinations count
+            (nparray[int]): a new state of the line
         """
         start = perf_counter_ns()
 
-        before_count = self.count
         result = self.__sub_collapse(self.task, field_line)
         self.count = result.count
 
@@ -43,7 +42,7 @@ class TaskLine:
         self.metrics.add_event(('collapse', self.id))
         self.metrics.add_value(('collapse.time', self.id), dt)
 
-        return result.line, before_count
+        return result.line
 
     def __sub_collapse(self, task: Task, field_line: FieldLine):
         """Recursive function that calculates (collapses) all combinations of a segment of tasks 
@@ -54,7 +53,7 @@ class TaskLine:
             field_line (FieldLine): line on the field or its continuos segment
 
         Returns:
-            CollapseLine: a new state of a line or its segment
+            CollapsedResult: a new state of a line or its segment
         """
         run = PrioritizedRun(self.__sub_collapse)
 

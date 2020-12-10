@@ -14,9 +14,9 @@ class FieldLineShould(TestCase):
         middle2_x = line2.find_center_crossed()
         middle3_x = line3.find_center_crossed()
         
-        self.assertEquals(middle1_x, (3, 4))
-        self.assertEquals(middle2_x, (3, 4))
-        self.assertEquals(middle3_x, (2, 3))
+        self.assertEqual(middle1_x, (3, 4))
+        self.assertEqual(middle2_x, (3, 4))
+        self.assertEqual(middle3_x, (2, 3))
 
     def test_slice(self):
         line = FieldLine([-1, -1, 0, -1, -1])
