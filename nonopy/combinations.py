@@ -1,5 +1,4 @@
 import numpy as np
-from itertools import islice, tee
 from collections import defaultdict
 
 from nonopy.cell import Cell, MIN_BLOCK_SPACE
@@ -7,16 +6,43 @@ from nonopy.format import format_line
 
 
 def calculate_moves(task, length):
+    """Calculates how many empty cells left if blocks in task are compacted to one side
+       thus number of cells the rightmost block can be moved from compacted form.
+
+    Args:
+        task (list[int]): puzzle cues
+        length (int): length of a line
+
+    Returns:
+        int: number of moves available
+    """
     return length - sum(task) - MIN_BLOCK_SPACE * len(task) + MIN_BLOCK_SPACE
 
 
 def calculate_hottask(task, length):
-    """Calculates if task has block that produces filled cells on collapse on a clean line"""
+    """Calculates if task has block that produces filled cells on collapse on a clean line
+
+    Args:
+        task (list[int]): puzzle cues
+        length (int): length of a line
+
+    Returns:
+        bool: whether task is hot
+    """
     max_block = max(task)
     return calculate_moves(task, length) < max_block
 
 
 def __iderivative(iterator, start=0):
+    """Iterator returns discrete derivative: difference of the current and previous number
+
+    Args:
+        iterator (Iterable[int]): numbers sequence
+        start (int, optional): Start for the previous element. Defaults to 0.
+
+    Yields:
+        int: next derivative number
+    """
     prev = start
     for item in iterator:
         yield item - prev
@@ -27,9 +53,7 @@ __calc_n_cache = {}
 
 
 def __calc_n(n, length):
-    '''
-    Calculate count of all combinations of n blocks of size 1 fit in length with spaces of size 1
-    '''
+    """Calculate count of all combinations of n blocks of size 1 fit in length with spaces of size 1"""
     if n == 1:
         return length
 
@@ -63,7 +87,17 @@ def calculate_count(task, length):
     Than assembles results by multiplying.
 
     Also reduces all blocks in task to length of 1 and space to length of 1.
+
+    Args:
+        task (list[int]): puzzle cues
+        length (int): length of a line
+
+    Returns:
+        int: number of combinations of block position on the line of a given length
     """
     extra_block_space = (MIN_BLOCK_SPACE - 1) * (len(task) - 1)
     extra_block_len = sum(task) - len(task)
     return __calc_n(len(task), length - extra_block_space - extra_block_len)
+
+def clear_cache():
+    __calc_n_cache.clear()

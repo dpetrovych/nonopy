@@ -4,9 +4,10 @@ import sys
 
 from tabulate import tabulate
 
-from nonopy import Parser, get_solver
+from nonopy import Parser, get_solver, clear_cache
 from nonopy.format import format_grid, format_ms_time
 from nonopy.log import create_logger_context
+from nonopy.metrics import Metrics
 
 
 def print_solvers_stats(solutions, filename=''):
@@ -57,20 +58,20 @@ def print_line_stats(solutions, nonogram, sort_by):
                     1_000_000,
                 ]
 
-    table = [
-        *collapse_line_tuple(nonogram.task.columns, 'c'),
-        *collapse_line_tuple(nonogram.task.rows, 'r'),
-    ]
+        table = [
+            *collapse_line_tuple(nonogram.task.columns, 'c'),
+            *collapse_line_tuple(nonogram.task.rows, 'r'),
+        ]
 
-    if sort_by != 0:
-        sort_desc = sort_by < 0
-        sort_by_index = (-sort_by if sort_desc else sort_by) - 1
-        table = sorted(table,
-                       key=lambda x: x[sort_by_index],
-                       reverse=sort_desc)
+        if sort_by != 0:
+            sort_desc = sort_by < 0
+            sort_by_index = (-sort_by if sort_desc else sort_by) - 1
+            table = sorted(table,
+                           key=lambda x: x[sort_by_index],
+                           reverse=sort_desc)
 
-    print()
-    print(tabulate(table, headers=headers, floatfmt=floatfmt))
+        print()
+        print(tabulate(table, headers=headers, floatfmt=floatfmt))
 
 
 def main(args):
@@ -84,10 +85,13 @@ def main(args):
                                    verbose=args.verbose)
 
     def solve(Solver):
+        metrics = Metrics()
         with logger as log:
-            solver = Solver(nonogram.task, log=log)
-            grid = solver.solve()
-            return grid, solver.status, solver.metrics
+            solver = Solver(metrics, log)
+            grid = solver.solve(nonogram.task)
+            status = 'solved' if grid is not None else 'unsolved'
+            clear_cache()
+            return grid, status, metrics
 
     solutions = [(k, solve(get_solver(k))) for k in args.solvers]
 

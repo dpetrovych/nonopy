@@ -7,7 +7,6 @@ class Metrics:
         self.values = defaultdict(lambda: [])
         self.values_sum = defaultdict(lambda: 0)
 
-
     def add_event(self, event_id):
         """Keeps track of events/operations count total
 
@@ -23,7 +22,6 @@ class Metrics:
                 k = eid if k is None else k + '.' + eid
                 self.count[k] += 1
 
-
     def add_value(self, key, value):
         if isinstance(key, str):
             key = [key]
@@ -34,8 +32,6 @@ class Metrics:
                 k = next_k if k is None else k + '.' + next_k
                 self.values[k].append(value)
                 self.values_sum[k] += value
-    
-
 
     def get_event_count(self, key):
         return self.count[key]

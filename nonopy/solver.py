@@ -9,23 +9,20 @@ from nonopy.field import Field
 from nonopy.hotheap import Hotheap
 from nonopy.log import Log
 from nonopy.metrics import Metrics
+from nonopy.collapse import Compute
 
 
 class Solver():
-    def __init__(self, task, log=None):
-        self.task = task
-        self.status = None
-        self.log = log if log else Log()
-        self.metrics = Metrics()
-
-    def __repr__(self):
-        return '\n'.join([f'status = {self.status}'])
+    def __init__(self, collapse=None, metrics=None, log=None):
+        self.metrics = metrics if metrics is not None else Metrics()
+        self.log = log if log is not None else Log()
+        self.collapse = collapse if collapse is not None else Compute(None, None, self.metrics)
 
     def __init_line(self, order, index, task, length):
         """Creates a TaskLine object and keeps its metrics
 
         Args:
-            order (str): character /[cr]/ that indentifies the column or row order of a line
+            order (str): character /[cr]/ that identifies the column or row order of a line
             index (int): 0-based index of line in an order
             task (list[int]): list of puzzle cues for the order/index
             length (int): length of a line in the specified order
@@ -33,12 +30,12 @@ class Solver():
         Returns:
             TaskLine
         """
-        
+
         with self.log.init_line(order, index, task=task) as init_end:
             start = perf_counter_ns()
 
             line_id = order + str(index)
-            line = TaskLine(line_id, task, length, self.metrics)
+            line = TaskLine(line_id, task, length)
 
             dt = perf_counter_ns() - start
             self.metrics.add_event(('init', line_id))
@@ -48,46 +45,46 @@ class Solver():
             init_end(count=line.count)
             return line
 
-    def preheat(self):
+    def __init_combinations(self, task):
         """Generages all TaskLine objects for the puzzle. 
            Since calculating an count of combinations for each line may take considerable time 
            this action done separately and metrics are taken on each line.
         """
-        self.field = Field(self.task.height, self.task.width)
-        self.combinations = {
+        return {
             'r': [
-                self.__init_line('r', i, row, self.task.width)
-                for i, row in enumerate(self.task.rows)
+                self.__init_line('r', i, row, task.width)
+                for i, row in enumerate(task.rows)
             ],
             'c': [
-                self.__init_line('c', i, column, self.task.height)
-                for i, column in enumerate(self.task.columns)
+                self.__init_line('c', i, column, task.height)
+                for i, column in enumerate(task.columns)
             ]
         }
 
-        self.heap = Hotheap(self.combinations)
-        self.status = 'hot'
+    def solve(self, task):
+        """Solves puzzle in continuous reduction of blocks possitions
 
-    def solve(self):
-        if not self.status:
-            self.preheat()
+        Returns:
+            (nparray): 2d puzzle grid as a numpy array
+        """
 
-        if not self.status == 'hot':
-            Exception('solve already run')
+        field = Field(task.height, task.width)
+        combinations = self.__init_combinations(task)
+        heap = Hotheap(combinations)
 
-        while self.heap.is_hot:
-            order, index, line = self.heap.pop()
-            field_line = FieldLine(self.field.get_line(order, index))
+        while heap.is_hot:
+            order, index, task_line = heap.pop()
+            field_line = FieldLine(field.get_line(order, index))
 
-            with self.log.collapse(order, index, task=line, line=field_line) as log_collapse_end:
-                collapsed_line = line.collapse(field_line)
+            with self.log.collapse(order,
+                                   index,
+                                   task=task_line,
+                                   line=field_line) as log_collapse_end:
+                collapsed_line = self.collapse(task_line, field_line)
                 diff = field_line.diff(collapsed_line)
                 log_collapse_end(diff=diff)
 
-            self.field.apply(order, index, collapsed_line)
-            self.heap.push_diff(order, diff)
+            field.apply(order, index, collapsed_line)
+            heap.push_diff(order, diff)
 
-        self.status, grid = ('solved',
-                             self.field.grid) if self.field.is_solved else (
-                                 'unsolved', None)
-        return grid
+        return field.grid if field.is_solved else None
