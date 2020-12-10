@@ -5,7 +5,7 @@ from typing import List
 
 from nonopy.cell import Cell, Cells, MIN_BLOCK_SPACE
 from nonopy.combinations import calculate_hottask, calculate_moves, calculate_count
-from nonopy.collapse.result import CollapseResult, reduce_collapsed
+from nonopy.collapse.result import CollapseResult
 from nonopy.line.fieldline import FieldLine
 from nonopy.line.taskline import TaskLine
 from nonopy.metrics import Metrics
@@ -15,9 +15,9 @@ CollapseRun = namedtuple('CollapseRun', ['task', 'line'])
 
 
 class Compute():
-    def __init__(self, priority, collapser, metrics):
+    def __init__(self, priority, reducer, metrics):
         self.priority = priority
-        self.collapser = collapser
+        self.reducer = reducer
         self.metrics = metrics
 
     def __call__(self, task_line: TaskLine, field_line: FieldLine):
@@ -69,7 +69,8 @@ class Compute():
 
             division_results = (task_division(i)
                                 for i in range(len(task), -1, -1))
-            return reduce_collapsed(division_results, len(field_line))
+
+            return self.__reduce(division_results, len(field_line))
 
         def divide_by_filled(f_start, f_end):
             self.metrics.add_event(('sub_collapse', 'divide_by_filled'))
@@ -114,7 +115,8 @@ class Compute():
             division_results = (task_division(i, pos)
                                 for i, pos_start, pos_end in blocks_placement
                                 for pos in range(pos_start, pos_end + 1))
-            return reduce_collapsed(division_results, len(field_line))
+
+            return self.__reduce(division_results, len(field_line))
 
         def inplace():
             self.metrics.add_event(('sub_collapse', 'inplace'))
@@ -208,3 +210,6 @@ class Compute():
                 return None, None, 0
 
         return lresult, rresult, lresult.count * rresult.count
+
+    def __reduce(self, iter, length):
+        return self.reducer.reduce(iter, length)

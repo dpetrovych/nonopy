@@ -1,5 +1,4 @@
 import numpy as np
-from itertools import islice, tee
 from collections import defaultdict
 
 from nonopy.cell import Cell, MIN_BLOCK_SPACE
