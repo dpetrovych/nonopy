@@ -1,1 +1,2 @@
-from .parser import *
+from .parser import ParserShould
+from .combinations import CombinationsShould

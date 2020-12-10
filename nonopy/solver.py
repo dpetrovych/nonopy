@@ -9,14 +9,17 @@ from nonopy.field import Field
 from nonopy.hotheap import Hotheap
 from nonopy.log import Log
 from nonopy.metrics import Metrics
+from nonopy.collapse import Compute
 
 
 class Solver():
-    def __init__(self, task, log=None):
+    def __init__(self, task, collapse=None, log=None):
         self.task = task
         self.status = None
-        self.log = log if log else Log()
         self.metrics = Metrics()
+        self.log = log if log is not None else Log()
+        self.collapse = collapse if collapse is not None else Compute(
+            None, None, self.metrics)
 
     def __repr__(self):
         return '\n'.join([f'status = {self.status}'])
@@ -33,12 +36,12 @@ class Solver():
         Returns:
             TaskLine
         """
-        
+
         with self.log.init_line(order, index, task=task) as init_end:
             start = perf_counter_ns()
 
             line_id = order + str(index)
-            line = TaskLine(line_id, task, length, self.metrics)
+            line = TaskLine(line_id, task, length)
 
             dt = perf_counter_ns() - start
             self.metrics.add_event(('init', line_id))
@@ -69,6 +72,11 @@ class Solver():
         self.status = 'hot'
 
     def solve(self):
+        """Solves puzzle in continious reduction of blocks possitions
+
+        Returns:
+            (nparray): 2d puzzle grid as a numpy array
+        """
         if not self.status:
             self.preheat()
 
@@ -76,11 +84,11 @@ class Solver():
             Exception('solve already run')
 
         while self.heap.is_hot:
-            order, index, line = self.heap.pop()
+            order, index, task_line = self.heap.pop()
             field_line = FieldLine(self.field.get_line(order, index))
 
-            with self.log.collapse(order, index, task=line, line=field_line) as log_collapse_end:
-                collapsed_line = line.collapse(field_line)
+            with self.log.collapse(order, index, task=task_line, line=field_line) as log_collapse_end:
+                collapsed_line = self.collapse(task_line, field_line)
                 diff = field_line.diff(collapsed_line)
                 log_collapse_end(diff=diff)
 

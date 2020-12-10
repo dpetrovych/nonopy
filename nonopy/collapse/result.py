@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import numpy as np
 from typing import List
 
@@ -32,10 +33,12 @@ class CollapseResult:
         return cls(np.full(length, Cell.FILLED, Cell.dtype), count)
 
 
-def reduce_collapsed(collapsed_results: List[CollapseResult], length: int):
+def reduce_collapsed(collapsed_results, length):
     '''Combine results from multiple divisions
+
     Args:
-        combinations (list[(nparray, int)])
+        combinations (Iterable[CollapsedResult]): iterable of all division results
+        length (int): length of a line/section
     '''
     collapsed_results = [*filter(lambda result: result is not None, collapsed_results)]
     if len(collapsed_results) == 0:
