@@ -36,11 +36,18 @@ class Metrics:
                 self.values_sum[k] += value
     
 
-    def get_event_count(self, *keys):
+
+    def get_event_count(self, key):
+        return self.count[key]
+
+    def list_events_count(self, *keys):
         return [self.count[k] for k in keys]
 
     def get_values(self, key):
         return self.values[key]
 
-    def get_value_sum(self, *keys):
+    def list_values_sum(self, *keys):
         return [self.values_sum[k] for k in keys]
+
+    def get_values_sum(self, key):
+        return self.values_sum[key]

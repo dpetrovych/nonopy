@@ -43,8 +43,8 @@ def format_grid(grid, empty=' ', crossed=' ', filled='█', width=2):
     return f"┌{table_dash}┐\n{table_body}\n└{table_dash}┘"
 
 
-def format_ns_time(t_ns):
-    """Formats time to millisecond float value
+def format_ms_time(t_ns, deci = 0):
+    """Formats time to millisecond value
 
     Args:
         t (int): time in nanoseconds
@@ -53,4 +53,4 @@ def format_ns_time(t_ns):
         str
     """
     t_ms = t_ns / 1_000_000
-    return f'{t_ms:.0f} ms'
+    return f'{t_ms:.{deci}f} ms'

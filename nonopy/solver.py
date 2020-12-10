@@ -43,6 +43,7 @@ class Solver():
             dt = perf_counter_ns() - start
             self.metrics.add_event(('init', line_id))
             self.metrics.add_value(('init.time', line_id), dt)
+            self.metrics.add_value(('complexity', line_id), line.count)
 
             init_end(count=line.count)
             return line
@@ -65,11 +66,6 @@ class Solver():
         }
 
         self.heap = Hotheap(self.combinations)
-
-        complexity = sum(line.count for lines in self.combinations.values()
-                         for line in lines)
-        self.metrics.add_value('complexity', complexity)
-
         self.status = 'hot'
 
     def solve(self):
