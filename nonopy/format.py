@@ -7,7 +7,7 @@ def format_line(line, empty=' ', crossed='0', filled='1'):
     Args:
         line (list[int]): list (or any iterative object) representing values of a specific line
         empty (str, optional): character for an empty cell. Defaults to ' '.
-        crossed (str, optional): character for a croseed cell. Defaults to '0'.
+        crossed (str, optional): character for a crossed cell. Defaults to '0'.
         filled (str, optional): character for a filled cell. Defaults to '1'.
 
     Returns:
@@ -24,7 +24,7 @@ def format_grid(grid, empty=' ', crossed=' ', filled='█', width=2):
     Args:
         grid (list[list[int]]): a puzzle grid
         empty (str, optional): character for an empty cell. Defaults to ' '.
-        crossed (str, optional): character for a croseed cell. Defaults to ' '.
+        crossed (str, optional): character for a crossed cell. Defaults to ' '.
         filled (str, optional): character for a filled cell. Defaults to '█'.
         width (int, optional): number of characters per cell. Defaults to 2.
 
@@ -48,7 +48,8 @@ def format_ms_time(t_ns, deci = 0):
 
     Args:
         t (int): time in nanoseconds
-    
+        deci (int, optional): number of decimal places. Defaults to 0.
+
     Returns:
         str
     """

@@ -1,6 +1,7 @@
 from nonopy.line import TaskLine, FieldLine
 from nonopy.cell import Cell
 from nonopy.collapse import Compute
+from nonopy.collapse.priority import RecursionPriority
 from nonopy.metrics import Metrics
 from tests.testcase import TestCase
 from tests.utils import stoline, fline
@@ -8,7 +9,7 @@ from tests.utils import stoline, fline
 
 class ComputeShould(TestCase):
     def get_compute(self):
-        return Compute(None, None, Metrics())
+        return Compute(RecursionPriority(), None, Metrics())
 
     def test_1block__emptyline(self):
         line = TaskLine('c1', [3], 5)

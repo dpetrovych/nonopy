@@ -15,8 +15,8 @@ CollapseRun = namedtuple('CollapseRun', ['task', 'line'])
 
 
 class Compute():
-    def __init__(self, prioritizer, collapser, metrics):
-        self.prioritizer = prioritizer
+    def __init__(self, priority, collapser, metrics):
+        self.priority = priority
         self.collapser = collapser
         self.metrics = metrics
 
@@ -51,7 +51,6 @@ class Compute():
         Returns:
             CollapsedResult: a new state of a line or its segment
         """
-
         def divide_by_crossed(x_start, x_end):
             self.metrics.add_event(('sub_collapse', 'divide_by_crossed'))
 
@@ -161,7 +160,7 @@ class Compute():
         return inplace()
 
     def run_sides(self, *, left: CollapseRun, right: CollapseRun):
-        """Runs left and right side ordered by prioritizer and returns both result if both sides have it
+        """Runs left and right side ordered by priority class and returns both result if both sides have it
 
         Args:
             left (CollapseRun): left run tuple
@@ -191,7 +190,7 @@ class Compute():
             return None, None, 0
 
         lresult, rresult = None, None
-        if len(left.task) <= len(right.task):  # TODO set prioritizer here
+        if self.priority.run_left_first(left, right):
             lresult = self.__collapse(left.task, left.line)
             if lresult is None:
                 return None, None, 0

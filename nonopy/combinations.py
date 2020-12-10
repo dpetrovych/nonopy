@@ -38,7 +38,7 @@ def __iderivative(iterator, start=0):
     """Iterator returns discrete derivative: difference of the current and previous number
 
     Args:
-        iterator (Iterable[int]): numebers sequence
+        iterator (Iterable[int]): numbers sequence
         start (int, optional): Start for the previous element. Defaults to 0.
 
     Yields:
@@ -94,8 +94,11 @@ def calculate_count(task, length):
         length (int): length of a line
 
     Returns:
-        int: number of combinations of block position on the line of a given lenght
+        int: number of combinations of block position on the line of a given length
     """
     extra_block_space = (MIN_BLOCK_SPACE - 1) * (len(task) - 1)
     extra_block_len = sum(task) - len(task)
     return __calc_n(len(task), length - extra_block_space - extra_block_len)
+
+def clear_cache():
+    __calc_n_cache.clear()
