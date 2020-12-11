@@ -1,4 +1,6 @@
-# Nonopy
+# Nonopy 
+
+[![Build Status](https://travis-ci.com/dpetrovych/nonopy.svg?branch=main)](https://travis-ci.com/dpetrovych/nonopy)
 
 CLI and library for solving nonograms (aka griddlers, picross).
 Supports puzzles with definite and deterministic solutions.
