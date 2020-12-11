@@ -2,13 +2,35 @@
 
 [![Build Status](https://travis-ci.com/dpetrovych/nonopy.svg?branch=main)](https://travis-ci.com/dpetrovych/nonopy)
 
-CLI and library for solving nonograms (aka griddlers, picross).
+CLI and library for solving [nonograms](https://en.wikipedia.org/wiki/Nonogram) (aka griddlers, picross).
 Supports puzzles with definite and deterministic solutions.
+
+## Quick start
+
+Before you start, check [requirements](#Requirements).
+
+```bash
+# clone and install
+git clone git@github.com:dpetrovych/nonopy.git
+cd nonopy
+python -m pip install -r requirements.txt
+
+# run
+python cli.py ./data/hard/tiger.non -i
+
+# also run
+python cli.py ./data/hard/sun.non -G --solvers AC --linestats -3
+
+# run tests
+python -m unittest -v
+```
+
+Don't want to mess up your environment setup? You can touch-and-go with a [Docker image](#Docker%20usage).
 
 ## CLI usage
 
 ```bash
-python cli.py [-h] [--solvers ABC] [--verbose] [--interactive] path
+python cli.py [-h] [--solvers ABC] [--verbose] [--interactive] [--nogrid] [--linestats [SORTBY]] path
 ```
 
 ### Positional arguments
@@ -27,6 +49,26 @@ python cli.py [-h] [--solvers ABC] [--verbose] [--interactive] path
 | --interactive, -i     | shows grid while solving                                                                                   |
 | --nogrid, -G          | hides grid in final output (for comparing stats only)                                                      |
 | --linestats [SORTBY]  | shows statistics per line sorted by column 1-based index (negative values for sorting in descending order) |
+
+## Docker usage
+
+```bach
+wget -P ./data https://raw.githubusercontent.com/dpetrovych/nonopy/main/data/hard/sun.non
+docker run -t --rm -v "${PWD}/data:/data" dpetrovych/nonopy:latest /data/sun.non
+```
+
+`--rm` flag removes container when command is complete.
+`-v` argument mounts a data directory with a puzzle file into container.
+
+A downside of this method is that you can't use `--interactive` flag of Nonopy CLI, since it depends on terminal resize (curses).
+
+## Requirements
+
+- Python 3.8  (check with `python -v`)
+- Pip         (check with `pip --version`)
+
+If you using any modern Linux distributions, you probably have one already. Here is an [instruction](https://docs.python-guide.org/starting/install3/linux/) if you need to install Python.
+
 
 ## Glossary
 
