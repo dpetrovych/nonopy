@@ -20,7 +20,7 @@ class Compute():
         self.reducer = reducer
         self.metrics = metrics
 
-    def __call__(self, task_line: TaskLine, field_line: FieldLine):
+    def __call__(self, order, index, task_line: TaskLine, field_line: FieldLine):
         """Performs collapse operation and returns diff with the line
 
         Args:
@@ -29,16 +29,16 @@ class Compute():
         Returns:
             (nparray[int]): a new state of the line
         """
+        line_id = f'{order}{index}'
         start = perf_counter_ns()
 
         result = self.__collapse(task_line.task, field_line)
-        task_line.count = result.count
 
         dt = perf_counter_ns() - start
-        self.metrics.add_event(('collapse', task_line.id))
-        self.metrics.add_value(('collapse.time', task_line.id), dt)
+        self.metrics.add_event(('collapse', line_id))
+        self.metrics.add_value(('collapse.time', line_id), dt)
 
-        return result.line
+        return result
 
     def __collapse(self, task: Task, field_line: FieldLine):
         """Recursive function that calculates (collapses) all combinations of a segment of tasks 

@@ -65,14 +65,14 @@ class FieldLine:
     def find_center_filled(self):
         return self.__find_center_block(Cell.FILLED)
 
-    def diff(self, new_line):
-        if len(self.narray) != len(new_line):
+    def diff(self, collapse_result):
+        if len(self.narray) != len(collapse_result.line):
             raise Exception(
-                f'Length mismatch: collapsed len {len(new_line)} != field line len {len(self.narray)}'
+                f'Length mismatch: collapsed len {len(collapse_result.line)} != field line len {len(self.narray)}'
             )
 
         def __diffiter():
-            for new, old in zip(new_line, self.narray):
+            for new, old in zip(collapse_result.line, self.narray):
                 yield new if old == Cell.EMPTY else Cell.EMPTY
 
-        return np.fromiter(__diffiter(), Cell.dtype, len(new_line))
+        return np.fromiter(__diffiter(), Cell.dtype, len(collapse_result.line))
