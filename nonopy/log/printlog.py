@@ -28,12 +28,12 @@ class PrintLog(Log):
 
         return nullcontext(init_line_end)
 
-    def collapse(self, order, index, *, task, line):
+    def collapse(self, order, index, *, task, line, count):
         str_index = repr_index(order, index)
         format_field_line = format_line(line, crossed='x')
         start = perf_counter()
         print(
-            f'collapse  start {str_index} line={format_field_line} cues={task.task} count= {task.count}'
+            f'collapse  start {str_index} line={format_field_line} cues={task.task} count= {count}'
         )
 
         def collapse_end(diff=None):
