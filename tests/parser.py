@@ -66,7 +66,7 @@ columns
         with self.assertRaises(ValueError) as cm:
             parser.parse(content.splitlines(True))
 
-        self.assertEqual(str(cm.exception), 'rows length shoule be 2 (found 1)')
+        self.assertEqual(str(cm.exception), 'rows length should be 2 (found 1)')
 
     def test_invalid_n_columns(self):
         parser = Parser()
@@ -87,7 +87,7 @@ columns
         with self.assertRaises(ValueError) as cm:
             parser.parse(content.splitlines(True))
 
-        self.assertEqual(str(cm.exception), 'columns length shoule be 3 (found 4)')
+        self.assertEqual(str(cm.exception), 'columns length should be 3 (found 4)')
 
 
 

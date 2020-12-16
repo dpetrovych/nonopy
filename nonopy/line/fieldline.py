@@ -71,8 +71,8 @@ class FieldLine:
                 f'Length mismatch: collapsed len {len(collapse_result.line)} != field line len {len(self.narray)}'
             )
 
-        def __diffiter():
-            for new, old in zip(collapse_result.line, self.narray):
-                yield new if old == Cell.EMPTY else Cell.EMPTY
+        def __diffiter(new_line, old_line):
+            for new, old in zip(new_line, old_line):
+                yield new if new != old else None
 
-        return np.fromiter(__diffiter(), Cell.dtype, len(collapse_result.line))
+        return [*__diffiter(collapse_result.line, self.narray)]

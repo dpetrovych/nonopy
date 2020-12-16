@@ -1,6 +1,7 @@
 import numpy as np
 
 from nonopy.line.fieldline import FieldLine
+from nonopy.collapse.result import CollapseResult
 from nonopy.cell import Cell
 from tests.testcase import TestCase
 
@@ -31,3 +32,11 @@ class FieldLineShould(TestCase):
         self.assertArrayEqual(line_slice_m1, [0])
         self.assertArrayEqual(line_slice_m2, [0])
         self.assertArrayEqual(line_empty, [])
+
+    def test_diff(self):
+        line = FieldLine([-1, -1, 0, -1, -1])
+        collapse_result = CollapseResult([0, 1, 0, 0, 1], 1)
+
+        diff = line.diff(collapse_result)
+
+        self.assertListEqual(diff, [0, 1, None, 0, 1])

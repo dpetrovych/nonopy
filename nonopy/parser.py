@@ -39,10 +39,10 @@ class Parser():
         rows, columns = descriptor['rows'], descriptor['columns']
 
         if (rows_len := len(rows)) != height:
-            raise ValueError(f'rows length shoule be {height} (found {rows_len})')
+            raise ValueError(f'rows length should be {height} (found {rows_len})')
 
         if (columns_len := len(columns)) != width:
-            raise ValueError(f'columns length shoule be {width} (found {columns_len})')
+            raise ValueError(f'columns length should be {width} (found {columns_len})')
 
         task = Nonotask(rows = rows, columns = columns)
 

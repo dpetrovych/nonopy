@@ -24,7 +24,7 @@ class Field:
             diff (nparray): 1d array represents new cells
         """
         def merge(line):
-            return [l if d == Cell.EMPTY else d for l, d in zip(line, diff)]
+            return [l if d is None else d for l, d in zip(line, diff)]
 
         if order == 'r':
             self.grid[index] = merge(self.grid[index])

@@ -13,7 +13,7 @@ def format_line(line, empty=' ', crossed='0', filled='1'):
     Returns:
         str: formatted line
     """
-    m = {Cell.FILLED: filled, Cell.CROSSED: crossed, Cell.EMPTY: empty}
+    m = {Cell.FILLED: filled, Cell.CROSSED: crossed, Cell.EMPTY: empty, None: empty}
 
     return f"|{''.join(map(m.get, line))}|"
 
