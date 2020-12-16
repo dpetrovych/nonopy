@@ -16,8 +16,7 @@ def get_opposite_order(order):
 
 
 class Hotheap:
-    def __init__(self, combinations: LineLookup,
-                 hot_list: List[Tuple[str, int]]):
+    def __init__(self, combinations: LineLookup, hot_list: List[Tuple[str, int]]):
         """Initializes heap of lines ready to be collapsed. Sorted asc by combinations count.
 
         Args:
@@ -41,7 +40,7 @@ class Hotheap:
             order (str): order of the diff line
             diff (nparray): array of diff cells
         """
-        effected_cells = set(np.where(diff != Cell.EMPTY)[0])
+        effected_cells = {i for i, d in enumerate(diff) if d is not None}
         if not effected_cells:
             return
 

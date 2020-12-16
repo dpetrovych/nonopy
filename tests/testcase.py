@@ -2,6 +2,7 @@ from unittest import TestCase as UTestCase
 
 from nonopy.format import format_line
 
+
 class TestCase(UTestCase):
     def assertArrayEqual(self, first, second):
         self.assertEqual(len(first), len(second), msg=f"count missmatched")

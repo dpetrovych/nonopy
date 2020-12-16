@@ -1,5 +1,4 @@
 from nonopy.combinations import calculate_count, calculate_hottask, calculate_moves
-from nonopy.cell import Cell
 from tests.testcase import TestCase
 
 
