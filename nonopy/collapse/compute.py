@@ -20,7 +20,8 @@ class Compute():
         self.reducer = reducer
         self.metrics = metrics
 
-    def __call__(self, order, index, task_line: TaskLine, field_line: FieldLine):
+    def __call__(self, order, index, task_line: TaskLine,
+                 field_line: FieldLine):
         """Performs collapse operation and returns diff with the line
 
         Args:
@@ -121,8 +122,22 @@ class Compute():
         def inplace():
             self.metrics.add_event(('sub_collapse', 'inplace'))
             move_space = calculate_moves(task, len(field_line))
-            if len(task) == 1 and move_space == 0:
-                return CollapseResult.filled(len(field_line), 1)
+            if move_space == 0:
+                line = np.empty(len(field_line), Cell.dtype)
+                cursor = 0
+                for block in task:
+                    for _ in range(block):
+                        line[cursor] = Cell.FILLED
+                        cursor += 1
+                    
+                    if cursor == len(field_line):
+                        break
+
+                    for _ in range(MIN_BLOCK_SPACE):
+                        line[cursor] = Cell.CROSSED
+                        cursor +=1
+                        
+                return CollapseResult(line, 1)
 
             count = calculate_count(task, len(field_line))
             if move_space >= max(task):
@@ -153,10 +168,12 @@ class Compute():
         if len(task) == 0 or (len(task) == 1 and task[0] == 0):
             return CollapseResult.crossed(len(field_line), 1)
 
-        if (pos_x := field_line.find_center_crossed()) != (None, None):
+        if (pos_x := field_line.find_center_block(
+                Cell.CROSSED)) != (None, None):
             return divide_by_crossed(*pos_x)
 
-        if (pos_f := field_line.find_center_filled()) != (None, None):
+        if (pos_f := field_line.find_center_block(
+                Cell.FILLED)) != (None, None):
             return divide_by_filled(*pos_f)
 
         return inplace()

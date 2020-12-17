@@ -35,22 +35,28 @@ class FieldLine:
         else:
             return self.narray != other
 
-    def __find_center(self, cell):
+    def copy_with(self, index, cell):
+        copy = self.narray.copy()
+        copy[index] = cell
+        copy.setflags(write=0)
+        return FieldLine(copy)
+
+    def find_center_cell(self, cell):
         '''Finding cell index next to a specific character (cell value) starting from the center'''
         middle = (len(self.narray) - 1) // 2
         for left_i in range(middle, -1, -1):
             if self.narray[left_i] == cell:
-                return left_i + 1
+                return left_i
             if self.narray[-1 - left_i] == cell:
-                return len(self.narray) - left_i
+                return len(self.narray) - left_i - 1
         return None
 
-    def __find_center_block(self, cell):
-        f_end = self.__find_center(cell)
-        if f_end is None:
-            return None, f_end
+    def find_center_block(self, cell):
+        f_start = self.find_center_cell(cell)
+        if f_start is None:
+            return f_start, None
 
-        f_start = f_end - 1
+        f_end = f_start + 1
         while f_start > 0 and self.narray[f_start - 1] == cell:
             f_start -= 1
 
@@ -59,11 +65,6 @@ class FieldLine:
 
         return f_start, f_end
 
-    def find_center_crossed(self):
-        return self.__find_center_block(Cell.CROSSED)
-
-    def find_center_filled(self):
-        return self.__find_center_block(Cell.FILLED)
 
     def diff(self, collapse_result):
         if len(self.narray) != len(collapse_result.line):

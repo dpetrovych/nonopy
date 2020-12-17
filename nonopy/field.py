@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 import numpy as np
 
 from nonopy.cell import Cell
@@ -7,7 +9,7 @@ from nonopy.line.fieldline import FieldLine
 
 class Field:
     """Represents a puzzle grid and gives access to individual lines"""
-    def __init__(self, height, width):
+    def __init__(self, height: int, width: int):
         self.grid = np.full((height, width), Cell.EMPTY, Cell.dtype)
 
     def __repr__(self):
@@ -15,13 +17,13 @@ class Field:
 
     is_solved = property(lambda self: (self.grid != Cell.EMPTY).all())
 
-    def apply_diff(self, order, index, diff):
+    def apply_diff(self, order: str, index: int, diff: List[int]):
         """Sets diff cells on to the field line
 
         Args:
             order (str): 'r' (row) or 'c' (column)
             index (int): 0-based line index
-            diff (nparray): 1d array represents new cells
+            diff (List[int]): 1d list represents new cells
         """
         def merge(line):
             return [l if d is None else d for l, d in zip(line, diff)]
@@ -33,7 +35,7 @@ class Field:
         else:
             raise ValueError(f'Unknown order value: {order}')
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Tuple[str, int]) -> FieldLine:
         """Gets a copy of a field line
 
         Args:
@@ -47,7 +49,7 @@ class Field:
         line.setflags(write=0)
         return FieldLine(line)
 
-    def __get_line_slice(self, order, index):
+    def __get_line_slice(self, order: str, index: int):
         if order == 'r':
             return self.grid[index]
 

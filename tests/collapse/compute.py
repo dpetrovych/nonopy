@@ -45,6 +45,28 @@ class ComputeShould(TestCase):
         self.assertArrayEqual(collapsed.line,
                               stoline('|    xxxxxxxx  xxxxxx|'))
 
+    def test_4block__checkerboard(self):
+        line = TaskLine([1, 1, 1, 1], 8)
+        compute = self.get_compute()
+
+        collapsed_0_x = compute('c', 0, line, fline('|x       |'))
+        collapsed_0_1 = compute('c', 1, line, fline('|1       |'))
+        collapsed_1_1 = compute('c', 2, line, fline('| 1      |'))
+        collapsed_1_x = compute('c', 3, line, fline('| x      |'))
+        collapsed_6_x = compute('c', 4, line, fline('|      x |'))
+        collapsed_6_1 = compute('c', 5, line, fline('|      1 |'))
+        collapsed_7_1 = compute('c', 6, line, fline('|       1|'))
+        collapsed_7_x = compute('c', 7, line, fline('|       x|'))
+
+        self.assertArrayEqual(collapsed_0_x.line, stoline('|x1x1x1x1|'))
+        self.assertArrayEqual(collapsed_0_1.line, stoline('|1x      |'))
+        self.assertArrayEqual(collapsed_1_1.line, stoline('|x1x1x1x1|'))
+        self.assertArrayEqual(collapsed_1_x.line, stoline('|1x      |'))
+        self.assertArrayEqual(collapsed_6_x.line, stoline('|      x1|'))
+        self.assertArrayEqual(collapsed_6_1.line, stoline('|1x1x1x1x|'))
+        self.assertArrayEqual(collapsed_7_1.line, stoline('|      x1|'))
+        self.assertArrayEqual(collapsed_7_x.line, stoline('|1x1x1x1x|'))
+
     def test_4block_filter__line_with_x(self):
         line = TaskLine([1, 8, 2, 2], 20)
         compute = self.get_compute()
@@ -58,8 +80,9 @@ class ComputeShould(TestCase):
         line = TaskLine([3, 30, 1, 5], 45)
         compute = self.get_compute()
 
-        collapsed = compute('c', 0, 
-            line, fline('|  1                                      1   |'))
+        collapsed = compute(
+            'c', 0, line,
+            fline('|  1                                      1   |'))
 
         self.assertArrayEqual(
             collapsed.line,
@@ -69,8 +92,8 @@ class ComputeShould(TestCase):
         line = TaskLine([4, 6, 1, 3, 2, 2, 3, 4, 1], 50)
         compute = self.get_compute()
 
-        collapsed = compute('c', 0, 
-            line,
+        collapsed = compute(
+            'c', 0, line,
             fline('|xxxxx1111x111111x1 x111xxx11x11xx111x             |'))
 
         self.assertArrayEqual(
@@ -81,8 +104,8 @@ class ComputeShould(TestCase):
         line = TaskLine([1, 2, 2, 1, 12, 1, 2, 2], 75)
         compute = self.get_compute()
 
-        collapsed = compute('c', 0, 
-            line,
+        collapsed = compute(
+            'c', 0, line,
             fline(
                 '|             x                    1 1  11                                  |'
             ))

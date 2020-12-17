@@ -11,9 +11,9 @@ class FieldLineShould(TestCase):
         line1 = FieldLine([-1, -1, -1, 0, -1])
         line2 = FieldLine([-1, -1, -1, 0])
         line3 = line1[1:4]
-        middle1_x = line1.find_center_crossed()
-        middle2_x = line2.find_center_crossed()
-        middle3_x = line3.find_center_crossed()
+        middle1_x = line1.find_center_block(Cell.CROSSED)
+        middle2_x = line2.find_center_block(Cell.CROSSED)
+        middle3_x = line3.find_center_block(Cell.CROSSED)
         
         self.assertEqual(middle1_x, (3, 4))
         self.assertEqual(middle2_x, (3, 4))
