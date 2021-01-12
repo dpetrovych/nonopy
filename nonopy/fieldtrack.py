@@ -1,5 +1,5 @@
 from nonopy.field import Field
-from nonopy.cell import Cell
+from nonopy.line.diffline import reversed_diff
 from nonopy.linelookup import LineLookup
 
 
@@ -41,10 +41,7 @@ class FieldTrack:
         self.log, roll = self.log[:checkpoint], list(
             reversed(self.log[checkpoint:]))
         for order, index, line_diff, count_diff in roll:
-            # reset EMPTY cell where previously defined (CROSSED OR FILLED) was set
-            rev_line_diff = [
-                Cell.EMPTY if d is not None else None for d in line_diff
-            ]
+            rev_line_diff = reversed_diff(line_diff)
             self.field.apply_diff(order, index, rev_line_diff)
             self.combinations[order, index] -= count_diff
 

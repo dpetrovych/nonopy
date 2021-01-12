@@ -4,6 +4,7 @@ from .log import Log
 from .printlog import PrintLog
 from .curseslog import CursesLog
 
+
 def create_logger_context(task, interactive = 0, verbose = 0):
     def create_curseslog():
         return CursesLog(task.height, task.width) if interactive else None

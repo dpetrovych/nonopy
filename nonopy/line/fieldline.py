@@ -1,7 +1,8 @@
 import numpy as np
 
-from nonopy.cell import Cell
 from nonopy.format import format_line
+from nonopy.line.diffline import diff
+
 '''Operations over field line'''
 
 
@@ -42,7 +43,7 @@ class FieldLine:
         return FieldLine(copy)
 
     def find_center_cell(self, cell):
-        '''Finding cell index next to a specific character (cell value) starting from the center'''
+        """Finding cell index next to a specific character (cell value) starting from the center"""
         middle = (len(self.narray) - 1) // 2
         for left_i in range(middle, -1, -1):
             if self.narray[left_i] == cell:
@@ -65,15 +66,5 @@ class FieldLine:
 
         return f_start, f_end
 
-
     def diff(self, collapse_result):
-        if len(self.narray) != len(collapse_result.line):
-            raise Exception(
-                f'Length mismatch: collapsed len {len(collapse_result.line)} != field line len {len(self.narray)}'
-            )
-
-        def __diffiter(new_line, old_line):
-            for new, old in zip(new_line, old_line):
-                yield new if new != old else None
-
-        return [*__diffiter(collapse_result.line, self.narray)]
+        return diff(self.narray, collapse_result.line)
