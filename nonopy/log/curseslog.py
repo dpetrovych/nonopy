@@ -89,3 +89,6 @@ class CursesLog(Log):
             self.refresh()
 
         return nullcontext(collapse_end)
+
+    def checkpoint(self, order, index, *, cid, seed):
+        return nullcontext(lambda **kwargs: None)

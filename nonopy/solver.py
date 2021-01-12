@@ -1,5 +1,3 @@
-import numpy as np
-import textwrap as text
 from typing import List, Tuple
 
 from time import perf_counter_ns
@@ -24,10 +22,11 @@ class Solver():
             None, None, self.metrics)
 
     def __init_combinations(self, setup):
-        """Generages all combinations counts for the puzzle. 
+        """Generates all combinations counts for the puzzle.
            Since calculating a count of combinations for each line may take considerable time 
            this action done separately and metrics are taken on each line.
         """
+
         def count(order, index, task, length):
             with self.log.init_line(order, index, task=task) as init_end:
                 start = perf_counter_ns()
@@ -55,13 +54,13 @@ class Solver():
         return LineLookup(rows=rows, columns=columns)
 
     def __diff_collapse(
-        self,
-        order: str,
-        index: int,
-        task: List[int],
-        count: int,
-        line: FieldLine,
-        baseline: FieldLine = None,
+            self,
+            order: str,
+            index: int,
+            task: List[int],
+            count: int,
+            line: FieldLine,
+            baseline: FieldLine = None,
     ) -> Tuple[List[int], int]:
         """Runs collapse and returns line and combinations count difference
 
@@ -88,10 +87,10 @@ class Solver():
             line_diff = baseline.diff(collapsed_result)
             count_diff = collapsed_result.count - count
             log_collapse_end(diff=line_diff)
-        return (line_diff, count_diff)
+        return line_diff, count_diff
 
     def solve(self, setup):
-        """Solves puzzle in continuous reduction of blocks possitions
+        """Solves puzzle in continuous reduction of blocks positions
 
         Args:
             setup (Nonotask): a puzzle data
@@ -128,7 +127,7 @@ class Solver():
                     line_diff, count_diff = self.__diff_collapse(
                         order, index, task_line, combinations_count,
                         field_line)
-                    
+
                     if line_diff is None:
                         return None
 
@@ -139,13 +138,14 @@ class Solver():
                     return field.grid
 
                 # solve non determined
-                checkpoint = track.create_checkpoint()
-                print('set', checkpoint)
-
+                checkpoint_id = track.create_checkpoint()
                 _, order, index = min((count, order, index)
                                       for order, lines in combinations
                                       for index, count in enumerate(lines)
                                       if count > 1)
+
+
+                # print('set', checkpoint_id)
 
                 field_line = field[order, index]
                 combinations_count = combinations[order, index]
@@ -155,34 +155,36 @@ class Solver():
                 seed_index = field_line.find_center_cell(Cell.EMPTY)
                 seeded_line = field_line.copy_with(seed_index, Cell.FILLED)
 
-                print('seed - 1', order, index, seed_index)
-                line_diff, count_diff = self.__diff_collapse(
+                with self.log.checkpoint(order, index, cid=checkpoint_id, seed=seed_index) as log_rollback:
+
+                    # print('seed - 1', order, index, seed_index)
+                    line_diff, count_diff = self.__diff_collapse(
                         order, index, task_line, combinations_count,
                         seeded_line, field_line)
 
-                track.apply_diff(order, index, line_diff, count_diff)
+                    track.apply_diff(order, index, line_diff, count_diff)
 
-                # Run recursively with a seeded heap
-                seedheap = Hotheap(combinations, [])
-                seedheap.push_diff(order, line_diff)
-                result = solve_hot(seedheap, track)
+                    # Run recursively with a seeded heap
+                    seed_heap = Hotheap(combinations, [])
+                    seed_heap.push_diff(order, line_diff)
+                    result = solve_hot(seed_heap, track)
 
-                if result is not None:
-                    return result
+                    if result is not None:
+                        return result
 
-                # result is None - rollback progress
-                _ = track.rollback(checkpoint)
-                print('rollback', checkpoint)
-                #TODO: log rollback
+                    # result is None - rollback progress
+                    backtrack = track.rollback(checkpoint_id)
+                    # print('rollback', checkpoint_id)
+                    log_rollback(backtrack=backtrack)
 
                 # since solution in not found - cell is definitely CROSSED
                 seeded_line = field_line.copy_with(seed_index, Cell.CROSSED)
 
-                print('seed - 0', order, index, seed_index)
+                # print('seed - 0', order, index, seed_index)
                 line_diff, count_diff = self.__diff_collapse(
-                        order, index, task_line, combinations_count,
-                        seeded_line, field_line)
-                
+                    order, index, task_line, combinations_count,
+                    seeded_line, field_line)
+
                 track.apply_diff(order, index, line_diff, count_diff)
                 heap.push_diff(order, line_diff)
 
